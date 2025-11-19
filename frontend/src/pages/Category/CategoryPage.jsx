@@ -1,13 +1,24 @@
 import { useState, useEffect } from "react";
 import Layout from "../../components/Layout";
 import api from "../../lib/axios";
-import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Loader2,
+  Eye,
+  Folder,
+  Layers,
+} from "lucide-react";
 import CategoryFromModal from "../../components/categories/CategoryFormModal";
+import { useNavigate } from "react-router-dom";
 
 export default function CategoryPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCategories();
@@ -16,12 +27,29 @@ export default function CategoryPage() {
   const fetchCategories = async () => {
     try {
       const response = await api.get("/api/categories");
-      setCategories(response.data.data.data);
+      setCategories(response.data.data.data || response.data.data);
     } catch (err) {
       console.error("failed to retrieve data:", err);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Create Modal
+  const handleCreate = () => {
+    setSelectedCategory(null);
+    setIsModalOpen(true);
+  };
+
+  // Edit Modal
+  const handleEdit = (category) => {
+    setSelectedCategory(category);
+    setIsModalOpen(true);
+  };
+
+  // View Modal
+  const handleShowDetail = (id) => {
+    navigate(`/categories/${id}`);
   };
 
   const handleDelete = async (id) => {
@@ -42,7 +70,7 @@ export default function CategoryPage() {
           Kategori Asset
         </h1>
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={handleCreate}
           className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
         >
           <Plus size={18} />
@@ -55,9 +83,10 @@ export default function CategoryPage() {
         <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300">
           <thead className="bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 uppercase font-bold">
             <tr>
-              <th className="px-6 py-3">No</th>
-              <th className="px-6 py-3">Nama Kategori</th>
-              <th className="px-6 py-3">Slug</th>
+              <th className="px-6 py-3 w-12 text-center">No</th>
+              <th className="px-6 py-3 text-center">Category Name</th> 
+              <th className="px-6 py-3 text-center">Category Code</th> 
+              <th className="px-6 py-3 text-center">Sub-Categories</th>
               <th className="px-6 py-3 text-center">Action</th>
             </tr>
           </thead>
@@ -70,8 +99,8 @@ export default function CategoryPage() {
               </tr>
             ) : categories.length === 0 ? (
               <tr>
-                <td colSpan="4" className="px-6 py-3 text-center">
-                  No data yet
+                <td colSpan="5" className="px-6 py-8 text-center text-gray-500">
+                  No root categories found.
                 </td>
               </tr>
             ) : (
@@ -80,18 +109,57 @@ export default function CategoryPage() {
                   key={cat.id}
                   className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
-                  <td className="px-6 py-4 font-medium">{index + 1}</td>
-                  <td className="px-6 py-4 font-bold text-gray-900 dark:text-white">
+                  {/* No */}
+                  <td className="px-6 py-4 font-medium text-center">{index + 1}</td>
+
+                  {/* Name */}
+                  <td className="px-6 py-4 font-bold text-gray-900 dark:text-white flex items-center justify-center text-center gap-3">
+                    <div className="p-2 bg-orange-50 text-orange-500 rounded-lg">
+                      <Folder size={18} />
+                    </div>
                     {cat.name}
                   </td>
-                  <td className="px-6 py-4 italic text-gray-500">{cat.slug}</td>
-                  <td className="px-6 py-4 flex justify-center gap-3">
-                    <button className="text-yellow-500 hover:text-yellow-600">
+
+                  {/* Code */}
+                  <td className="px-6 py-4 text-center">
+                    <span className="font-mono font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded text-xs">
+                      {cat.code || "-"}
+                    </span>
+                  </td>
+
+                  {/* Child Count */}
+                  <td className="px-6 py-4 text-center">
+                    {cat.children_count > 0 ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <Layers size={12} /> {cat.children_count}
+                      </span>
+                    ) : (
+                      <span className="text-gray-300 text-xs italic">None</span>
+                    )}
+                  </td>
+
+                  {/* Actions */}
+                  <td className="px-6 py-4 flex justify-center gap-2">
+                    <button
+                      onClick={() => handleShowDetail(cat.id)}
+                      className="p-1 text-blue-500 hover:bg-blue-50 rounded transition-colors"
+                      title="View Details (Drill Down)"
+                    >
+                      <Eye size={18} />
+                    </button>
+
+                    <button
+                      onClick={() => handleEdit(cat)}
+                      className="p-1 text-yellow-500 hover:bg-yellow-50 rounded transition-colors"
+                      title="Edit"
+                    >
                       <Pencil size={18} />
                     </button>
+
                     <button
                       onClick={() => handleDelete(cat.id)}
-                      className="text-red-500 hover:text-red-600"
+                      className="p-1 text-red-500 hover:bg-red-50 rounded transition-colors"
+                      title="Delete"
                     >
                       <Trash2 size={18} />
                     </button>
@@ -107,6 +175,7 @@ export default function CategoryPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={fetchCategories}
+        categoryToEdit={selectedCategory}
       />
     </Layout>
   );

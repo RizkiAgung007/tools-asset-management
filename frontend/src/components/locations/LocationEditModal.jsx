@@ -114,7 +114,7 @@ export default function LocationEditModal({
 
         {/* Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
             Name
           </label>
           <input
@@ -129,7 +129,7 @@ export default function LocationEditModal({
         {/* Address */}
         {location?.type === "building" && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Address
             </label>
             <textarea
@@ -144,7 +144,7 @@ export default function LocationEditModal({
         {location?.type === "room" && (
           <>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                 Capacity (People/Unit)
               </label>
               <input
@@ -156,7 +156,7 @@ export default function LocationEditModal({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                 Notes / Landmark
               </label>
               <textarea
@@ -171,7 +171,7 @@ export default function LocationEditModal({
         {/* Description*/}
         {location?.type === "floor" && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Description
             </label>
             <textarea

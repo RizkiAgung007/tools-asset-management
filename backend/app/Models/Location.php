@@ -22,8 +22,8 @@ class Location extends Model
     ];
 
     /**
-     * Get the parent location
-     *
+      * Get the parent location
+    *
      */
     public function parent(): BelongsTo
     {

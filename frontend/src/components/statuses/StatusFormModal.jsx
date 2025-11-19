@@ -41,7 +41,7 @@ export default function StatusFormModal({ isOpen, onClose, onSuccess }) {
 
         {/* Input Status Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
             Status Name
           </label>
           <input
@@ -57,7 +57,7 @@ export default function StatusFormModal({ isOpen, onClose, onSuccess }) {
 
         {/* Color Badge */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
             Badge Color
           </label>
           <div className="grid grid-cols-3 gap-2">

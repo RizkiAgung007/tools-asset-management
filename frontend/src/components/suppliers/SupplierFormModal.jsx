@@ -63,7 +63,7 @@ export default function SupplierFormModal({ isOpen, onClose, onSuccess }) {
 
         {/* Compant Name */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
             Company Name
           </label>
           <input
@@ -81,7 +81,7 @@ export default function SupplierFormModal({ isOpen, onClose, onSuccess }) {
         {/* Contact Person */}
         <div className="relative">
           <User className="absolute left-3 top-9 text-gray-400" size={18} />
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
             Contact Person
           </label>
           <input
@@ -100,7 +100,7 @@ export default function SupplierFormModal({ isOpen, onClose, onSuccess }) {
         <div className="grid grid-cols-2 gap-4">
           <div className="relative">
             <Phone className="absolute left-3 top-9 text-gray-400" size={18} />
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Phone
             </label>
             <input
@@ -117,7 +117,7 @@ export default function SupplierFormModal({ isOpen, onClose, onSuccess }) {
 
           <div className="relative">
             <Mail className="absolute left-3 top-9 text-gray-400" size={18} />
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Email
             </label>
             <input
@@ -136,7 +136,7 @@ export default function SupplierFormModal({ isOpen, onClose, onSuccess }) {
         {/* Address */}
         <div className="relative">
           <MapPin className="absolute left-3 top-9 text-gray-400" size={18} />
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
             Address
           </label>
           <textarea

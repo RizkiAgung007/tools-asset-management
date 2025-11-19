@@ -8,6 +8,7 @@ import LocationPage from "./pages/Location/LocationPage";
 import LocationDetailPage from "./pages/Location/LocationDetailPage";
 import StatusPage from "./pages/Status/StatusPage";
 import SupplierPage from "./pages/Supplier/SupplierPage";
+import CategoryDetailPage from "./pages/Category/CategoryDetailPage";
 
 // Dashboard
 function Dashboard() {
@@ -32,6 +33,7 @@ function App() {
         <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/categories" element={<CategoryPage />} />
+            <Route path="/categories/:id" element={<CategoryDetailPage />} />
             <Route path="/locations" element={<LocationPage />} />
             <Route path="/locations/:id" element={<LocationDetailPage />} />
             <Route path="/statuses" element={<StatusPage />} />

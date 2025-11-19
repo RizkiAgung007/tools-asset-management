@@ -3,30 +3,37 @@ import api from "../../lib/axios";
 import Modal from "../common/Modal";
 import { Loader2 } from "lucide-react";
 
-export default function CategoryFromModal({
+export default function CategoryFormModal({
   isOpen,
   onClose,
   onSuccess,
   categoryToEdit,
 }) {
+  // State Form
   const [formName, setFormName] = useState("");
   const [formCode, setFormCode] = useState("");
   const [usefulLife, setUsefulLife] = useState("");
-  const [parents, setParents] = useState([]);
   const [parentId, setParentId] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState(false);
 
+  // State Data Dropdown (INI PENTING: Pisahkan data parents dengan parentId)
+  const [parents, setParents] = useState([]);
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Fetch data untuk dropdown saat modal dibuka
   useEffect(() => {
     if (isOpen) {
       fetchParents();
 
       if (categoryToEdit) {
+        // MODE EDIT: Isi form dengan data lama
         setFormName(categoryToEdit.name);
         setFormCode(categoryToEdit.code);
-        setUsefulLife(categoryToEdit.useful_life);
-        setParentId(categoryToEdit.parent_id);
+        setUsefulLife(categoryToEdit.useful_life || "");
+        setParentId(categoryToEdit.parent_id || ""); // Pastikan ini ID (angka/string), bukan object
       } else {
+        // MODE CREATE: Kosongkan
         setFormName("");
         setFormCode("");
         setUsefulLife("");
@@ -39,11 +46,14 @@ export default function CategoryFromModal({
   const fetchParents = async () => {
     try {
       const response = await api.get("/api/categories");
+      // Handle struktur response (sesuaikan dengan backend)
       const list = response.data.data.data || response.data.data;
 
-      const filtered = list.filter(c => c.id !== categoryToEdit?.id);
-      setParents(filtered);
+      // Filter: Cegah kategori memilih dirinya sendiri sebagai bapak
+      const filtered = list.filter((c) => c.id !== categoryToEdit?.id);
 
+      // PERBAIKAN UTAMA: Simpan list ke state 'parents', BUKAN 'parentId'
+      setParents(filtered);
     } catch (err) {
       console.error(err);
     }
@@ -58,28 +68,26 @@ export default function CategoryFromModal({
       name: formName,
       code: formCode,
       useful_life: usefulLife,
-      parent_id: parentId || null
+      parent_id: parentId || null, // Kirim null jika kosong
     };
 
     try {
       if (categoryToEdit) {
+        // UPDATE
         await api.put(`/api/categories/${categoryToEdit.id}`, payload);
       } else {
+        // CREATE
         await api.post("/api/categories", payload);
       }
 
-      setFormName("");
-      setFormCode("");
-      setUsefulLife("");
-      setParentId("");
-
-      onSuccess();
-      onClose();
+      onSuccess(); // Refresh data di parent page
+      onClose(); // Tutup modal
     } catch (err) {
+      console.error(err);
       if (err.response && err.response.data.message) {
         setError(err.response.data.message);
       } else {
-        setError("A system error occurred");
+        setError("A system error occurred. Check console for details.");
       }
     } finally {
       setIsSubmitting(false);
@@ -102,61 +110,55 @@ export default function CategoryFromModal({
           </div>
         )}
 
-        {/* Code */}
         <div className="grid grid-cols-3 gap-4">
+          {/* Code */}
           <div className="col-span-1">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               Code <span className="text-red-500">*</span>
             </label>
-
             <input
               type="text"
-              name="formCode"
               value={formCode || ""}
               onChange={(e) => setFormCode(e.target.value.toUpperCase())}
               className={inputClass}
               placeholder="Ex: LAP"
               required
-              autoFocus
               maxLength={5}
             />
           </div>
-        </div>
 
-        {/* Parent Category Dropdown */}
-        <div className="col-span-2"> 
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-            Parent Category
-          </label>
-
-          <select
-            value={parentId}
-            onChange={(e) => setParentId(e.target.value)}
-            className={inputClass}
-          >
-            <option>Choose Parent</option>
-            {parents.map(p => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
+          {/* Parent Category Dropdown */}
+          <div className="col-span-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Parent Category
+            </label>
+            <select
+              value={parentId}
+              onChange={(e) => setParentId(e.target.value)}
+              className={inputClass}
+            >
+              <option value="">-- No Parent (Root) --</option>
+              {parents.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Useful Life */}
-        <div className="col-span-2">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-            Useful Life
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Useful Life (Years)
           </label>
-
           <input
             type="number"
-            name="usefulLife"
             value={usefulLife || ""}
             onChange={(e) => setUsefulLife(e.target.value)}
             className={inputClass}
-            placeholder="Ex: 1"
-            required
-            autoFocus
-            min="1"
+            placeholder="Ex: 4"
+            min="0"
           />
           <p className="text-xs text-gray-400 mt-1">
             Standard: Laptop (4), Furniture (8)
@@ -164,11 +166,10 @@ export default function CategoryFromModal({
         </div>
 
         {/* Name Category */}
-        <div className="col-span-3">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-            Name Category
+        <div>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            Category Name <span className="text-red-500">*</span>
           </label>
-
           <input
             type="text"
             value={formName || ""}
@@ -176,11 +177,10 @@ export default function CategoryFromModal({
             className={inputClass}
             placeholder="Ex: Laptop & PC"
             required
-            autoFocus
           />
         </div>
 
-        <div className="flex justify-end gap-3 mt-6">
+        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
           <button
             type="button"
             onClick={onClose}

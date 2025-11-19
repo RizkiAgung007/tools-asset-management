@@ -13,7 +13,9 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        $categories = Category::latest()->paginate(25);
+        $query = Category::whereNull('parent_id')->withCount('children');
+
+        $categories = $query->latest()->paginate(10);
 
         return response()->json([
             'status' => 'success',
@@ -35,12 +37,18 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name'
+            'name'        => 'required|string|max:255|unique:categories,name',
+            'code'        => 'required|string|max:10|unique:categories,code',
+            'useful_life' => 'nullable|integer|min:1',
+            'parent_id'   => 'nullable|exists:categories,id'
         ]);
 
         $category = Category::create([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name)
+            'name'        => $request->name,
+            'code'        => strtoupper($request->code),
+            'slug'        => Str::slug($request->name),
+            'useful_life' => $request->useful_life,
+            'parent_id'   => $request->parent_id
         ]);
 
         return response()->json([
@@ -55,7 +63,12 @@ class CategoryController extends Controller
      */
     public function show(string $id)
     {
-        //
+        $category = Category::with(['parent', 'children'])->findOrFail($id);
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $category
+        ]);
     }
 
     /**
@@ -74,12 +87,24 @@ class CategoryController extends Controller
         $category = Category::findOrFail($id);
 
         $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name' . $id
+            'name'        => 'required|string|max:255|unique:categories,name,' . $id,
+            'code'        => 'required|string|max:10|unique:categories,code,' . $id,
+            'useful_life' => 'nullable|integer|min:1',
+            'parent_id'   => 'nullable|exists:categories,id'
         ]);
 
+        if ($request->parent_id == $id) {
+            return response()->json([
+                'message' => 'Category cannot be its own parent'
+            ]);
+        }
+
         $category->update([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name)
+            'name'        => $request->name,
+            'code'        => strtoupper($request->code),
+            'slug'        => Str::slug($request->name),
+            'useful_life' => $request->useful_life,
+            'parent_id'   => $request->parent_id
         ]);
 
         return response()->json([

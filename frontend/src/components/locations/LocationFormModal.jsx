@@ -65,7 +65,7 @@ export default function LocationFormModal({ isOpen, onClose, onSuccess }) {
           </h4>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Building Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -80,7 +80,7 @@ export default function LocationFormModal({ isOpen, onClose, onSuccess }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Address
             </label>
             <textarea
@@ -94,7 +94,7 @@ export default function LocationFormModal({ isOpen, onClose, onSuccess }) {
 
         {/* Floor */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
             Floor Name <span className="text-red-500">*</span>
           </label>
           <input
@@ -114,7 +114,7 @@ export default function LocationFormModal({ isOpen, onClose, onSuccess }) {
           </h4>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Room Name <span className="text-red-500">*</span>
             </label>
             <input
@@ -128,7 +128,7 @@ export default function LocationFormModal({ isOpen, onClose, onSuccess }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Notes / Landmark
             </label>
             <input

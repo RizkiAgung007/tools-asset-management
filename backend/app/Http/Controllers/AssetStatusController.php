@@ -25,19 +25,61 @@ class AssetStatusController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'  => 'required|string|max:255|unique:asset_statuses,name',
-            'style' => 'required|in:success,danger,warning,info,secondary'
+            'name'          => 'required|string|max:255|unique:asset_statuses,name',
+            'style'         => 'required|in:success,danger,warning,info,secondary',
+            'is_deployable' => 'boolean',
         ]);
 
         $status = AssetStatus::create([
-            'name'  => $request->name,
-            'slug'  => Str::slug($request->name),
-            'style' => $request->style
+            'name'          => $request->name,
+            'slug'          => Str::slug($request->name),
+            'style'         => $request->style,
+            'is_deployable' => $request->is_deployable ?? true
         ]);
 
         return response()->json([
             'status'  => 'success',
             'message' => 'Status saved',
+            'data'    => $status
+        ], 201);
+    }
+
+    /**
+     * Display the specified resource.
+     */
+    public function show($id)
+    {
+        $status = AssetStatus::findOrFail($id);
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $status
+        ]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, $id)
+    {
+        $status = AssetStatus::findOrFail($id);
+
+        $request->validate([
+            'name'          => 'required|string|max:255|unique:asset_statuses,name,' . $id,
+            'style'         => 'required|in:success,danger,warning,info,secondary',
+            'is_deployable' => 'boolean'
+        ]);
+
+        $status->update([
+            'name'          => $request->name,
+            'slug'          => Str::slug($request->name),
+            'style'         => $request->style,
+            'is_deployable' => $request->is_deployable
+        ]);
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => 'Status updated',
             'data'    => $status
         ], 201);
     }

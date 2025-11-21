@@ -1,209 +1,250 @@
-import { useEffect, useState } from "react";
-import api from "../../lib/axios";
-import Modal from "../common/Modal";
-import { Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import Layout from "../components/Layout";
+import api from "../lib/axios";
+import {
+  ArrowLeft,
+  Folder,
+  Box,
+  ChevronRight,
+  Loader2,
+  Clock,
+  Layers,
+  MapPin,
+  Tag,
+  Eye,
+} from "lucide-react";
 
-export default function CategoryFormModal({
-  isOpen,
-  onClose,
-  onSuccess,
-  categoryToEdit,
-}) {
-  // State Form
-  const [formName, setFormName] = useState("");
-  const [formCode, setFormCode] = useState("");
-  const [usefulLife, setUsefulLife] = useState("");
-  const [parentId, setParentId] = useState("");
+export default function CategoryDetailPage() {
+  const { id } = useParams();
+  const navigate = useNavigate();
 
-  // State Data Dropdown (INI PENTING: Pisahkan data parents dengan parentId)
-  const [parents, setParents] = useState([]);
+  const [category, setCategory] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState(null);
-
-  // Fetch data untuk dropdown saat modal dibuka
   useEffect(() => {
-    if (isOpen) {
-      fetchParents();
+    fetchDetail();
+  }, [id]);
 
-      if (categoryToEdit) {
-        // MODE EDIT: Isi form dengan data lama
-        setFormName(categoryToEdit.name);
-        setFormCode(categoryToEdit.code);
-        setUsefulLife(categoryToEdit.useful_life || "");
-        setParentId(categoryToEdit.parent_id || ""); // Pastikan ini ID (angka/string), bukan object
-      } else {
-        // MODE CREATE: Kosongkan
-        setFormName("");
-        setFormCode("");
-        setUsefulLife("");
-        setParentId("");
-      }
-      setError(null);
-    }
-  }, [isOpen, categoryToEdit]);
-
-  const fetchParents = async () => {
+  const fetchDetail = async () => {
+    setLoading(true);
     try {
-      const response = await api.get("/api/categories");
-      // Handle struktur response (sesuaikan dengan backend)
-      const list = response.data.data.data || response.data.data;
-
-      // Filter: Cegah kategori memilih dirinya sendiri sebagai bapak
-      const filtered = list.filter((c) => c.id !== categoryToEdit?.id);
-
-      // PERBAIKAN UTAMA: Simpan list ke state 'parents', BUKAN 'parentId'
-      setParents(filtered);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
-
-    const payload = {
-      name: formName,
-      code: formCode,
-      useful_life: usefulLife,
-      parent_id: parentId || null, // Kirim null jika kosong
-    };
-
-    try {
-      if (categoryToEdit) {
-        // UPDATE
-        await api.put(`/api/categories/${categoryToEdit.id}`, payload);
-      } else {
-        // CREATE
-        await api.post("/api/categories", payload);
-      }
-
-      onSuccess(); // Refresh data di parent page
-      onClose(); // Tutup modal
-    } catch (err) {
-      console.error(err);
-      if (err.response && err.response.data.message) {
-        setError(err.response.data.message);
-      } else {
-        setError("A system error occurred. Check console for details.");
-      }
+      // Backend sekarang mengirimkan .assets juga
+      const response = await api.get(`/api/categories/${id}`);
+      setCategory(response.data.data);
+    } catch (error) {
+      console.error(error);
+      navigate("/categories");
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
-  const inputClass =
-    "w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white outline-none transition-all";
+  // Helper Warna Status
+  const getStatusColor = (style) => {
+    switch (style) {
+      case "success":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "danger":
+        return "bg-red-100 text-red-800 border-red-200";
+      case "warning":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "info":
+        return "bg-blue-100 text-blue-800 border-blue-200";
+      default:
+        return "bg-gray-100 text-gray-800 border-gray-200";
+    }
+  };
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex h-screen items-center justify-center">
+          <Loader2 className="animate-spin text-blue-600" size={40} />
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!category) return null;
+
+  const hasChildren = category.children && category.children.length > 0;
+  const hasAssets = category.assets && category.assets.length > 0;
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={categoryToEdit ? "Edit Category" : "Add Category"}
-    >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {error && (
-          <div className="bg-red-50 text-red-600 p-3 rounded text-sm border border-red-200">
-            {error}
-          </div>
-        )}
+    <Layout>
+      {/* Header & Breadcrumbs */}
+      <div className="mb-8">
+        <div className="flex items-center text-sm text-gray-500 mb-4">
+          <Link to="/categories" className="hover:text-blue-600">
+            Categories
+          </Link>
+          {category.parent && (
+            <>
+              <ChevronRight size={14} className="mx-1" />
+              <Link
+                to={`/categories/${category.parent.id}`}
+                className="hover:text-blue-600"
+              >
+                {category.parent.name}
+              </Link>
+            </>
+          )}
+          <ChevronRight size={14} className="mx-1" />
+          <span className="font-bold text-gray-800">{category.name}</span>
+        </div>
 
-        <div className="grid grid-cols-3 gap-4">
-          {/* Code */}
-          <div className="col-span-1">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Code <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={formCode || ""}
-              onChange={(e) => setFormCode(e.target.value.toUpperCase())}
-              className={inputClass}
-              placeholder="Ex: LAP"
-              required
-              maxLength={5}
-            />
+        <div className="flex items-center gap-4">
+          <div className="p-4 bg-orange-100 text-orange-600 rounded-xl">
+            <Folder size={32} />
           </div>
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              {category.name}
+            </h1>
+            <div className="flex items-center gap-3 mt-1">
+              <span className="text-xs font-bold bg-gray-200 text-gray-700 px-2 py-0.5 rounded border border-gray-300">
+                CODE: {category.code}
+              </span>
+              {category.useful_life && (
+                <span className="text-xs font-medium text-gray-500 flex items-center gap-1">
+                  <Clock size={12} /> Life: {category.useful_life} Years
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
-          {/* Parent Category Dropdown */}
-          <div className="col-span-2">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Parent Category
-            </label>
-            <select
-              value={parentId}
-              onChange={(e) => setParentId(e.target.value)}
-              className={inputClass}
+      {/* --- LOGIKA TAMPILAN --- */}
+
+      {/* 1. Jika punya Anak -> Tampilkan List Sub-Kategori */}
+      {hasChildren ? (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+            <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2">
+              <Layers size={18} /> Sub-Categories ({category.children.length})
+            </h3>
+          </div>
+          <div className="divide-y divide-gray-100 dark:divide-gray-700">
+            {category.children.map((child) => (
+              <div
+                key={child.id}
+                onClick={() => navigate(`/categories/${child.id}`)}
+                className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between transition-colors cursor-pointer group"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="p-2 bg-orange-50 text-orange-500 rounded group-hover:bg-white group-hover:shadow-sm transition-all">
+                    <Folder size={20} />
+                  </div>
+                  <div>
+                    <span className="font-bold text-gray-800 dark:text-gray-200 block">
+                      {child.name}
+                    </span>
+                    <span className="text-xs text-gray-400 font-mono">
+                      {child.code}
+                    </span>
+                  </div>
+                </div>
+                <ChevronRight
+                  size={18}
+                  className="text-gray-300 group-hover:text-blue-500"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        // 2. Jika Tidak Punya Anak -> Tampilkan Tabel Aset (Inventory)
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex justify-between items-center">
+            <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2">
+              <Box size={18} /> Asset Inventory (
+              {category.assets ? category.assets.length : 0})
+            </h3>
+            <button
+              onClick={() => navigate("/assets/create")}
+              className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700 transition-colors"
             >
-              <option value="">-- No Parent (Root) --</option>
-              {parents.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+              + Add Asset
+            </button>
           </div>
-        </div>
 
-        {/* Useful Life */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Useful Life (Years)
-          </label>
-          <input
-            type="number"
-            value={usefulLife || ""}
-            onChange={(e) => setUsefulLife(e.target.value)}
-            className={inputClass}
-            placeholder="Ex: 4"
-            min="0"
-          />
-          <p className="text-xs text-gray-400 mt-1">
-            Standard: Laptop (4), Furniture (8)
-          </p>
+          {/* TABEL ASET */}
+          {hasAssets ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+                <thead className="bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 uppercase font-bold">
+                  <tr>
+                    <th className="px-6 py-3">Asset Tag</th>
+                    <th className="px-6 py-3">Name</th>
+                    <th className="px-6 py-3">Location</th>
+                    <th className="px-6 py-3 text-center">Status</th>
+                    <th className="px-6 py-3 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {category.assets.map((asset) => (
+                    <tr
+                      key={asset.id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <td className="px-6 py-4 font-mono font-bold text-blue-600">
+                        {asset.code}
+                      </td>
+                      <td className="px-6 py-4 font-medium text-gray-900 dark:text-white">
+                        {asset.name}
+                        <div className="text-xs text-gray-400 font-normal">
+                          SN: {asset.serial_number || "-"}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-1.5">
+                          <MapPin size={14} className="text-purple-500" />
+                          <span>{asset.location?.name || "-"}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        {asset.status && (
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-bold border ${getStatusColor(
+                              asset.status.style
+                            )}`}
+                          >
+                            {asset.status.name}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <button
+                          onClick={() => navigate(`/assets/${asset.id}`)}
+                          className="text-blue-500 hover:text-blue-700 p-1 hover:bg-blue-50 rounded"
+                          title="View Asset"
+                        >
+                          <Eye size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            // Placeholder jika kosong
+            <div className="p-12 text-center">
+              <div className="inline-block p-4 bg-gray-100 rounded-full text-gray-400 mb-3">
+                <Box size={32} />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white">
+                No Assets Yet
+              </h3>
+              <p className="text-gray-500 mt-1 mb-4">
+                You haven't registered any items under {category.name} yet.
+              </p>
+            </div>
+          )}
         </div>
-
-        {/* Name Category */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            Category Name <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={formName || ""}
-            onChange={(e) => setFormName(e.target.value)}
-            className={inputClass}
-            placeholder="Ex: Laptop & PC"
-            required
-          />
-        </div>
-
-        <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700 rounded-lg transition-colors"
-          >
-            Cancel
-          </button>
-
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {isSubmitting ? (
-              <Loader2 className="animate-spin" size={18} />
-            ) : categoryToEdit ? (
-              "Update Changes"
-            ) : (
-              "Save Category"
-            )}
-          </button>
-        </div>
-      </form>
-    </Modal>
+      )}
+    </Layout>
   );
 }

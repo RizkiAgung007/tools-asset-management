@@ -11,9 +11,32 @@ class CategoryController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $query = Category::whereNull('parent_id')->withCount('children');
+        $query = Category::with('parent');
+        // $query = Category::query();
+
+        if ($request->has('parent_id')) {
+            $query->where('parent_id', $request->parent_id);
+        } elseif ($request->has('only_root')) {
+            $query->whereNull('parent_id')->withCount('children');
+        } elseif ($request->has('only_children')) {
+            $query->whereNotNull('parent_id');
+        }
+
+        if ($request->search) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'ilike', '%' . $request->search . '%')
+                ->orWhere('code', 'ilike', '%' . $request->search . '%');
+            });
+        }
+
+        if ($request->has('no_paginate') || $request->has('per_page')) {
+            return response()->json([
+                'status' => 'success',
+                'data'   => $query->orderBy('name', 'asc')->get()
+            ]);
+        }
 
         $categories = $query->latest()->paginate(10);
 
@@ -63,7 +86,7 @@ class CategoryController extends Controller
      */
     public function show(string $id)
     {
-        $category = Category::with(['parent', 'children'])->findOrFail($id);
+        $category = Category::with(['parent', 'children', 'asset.location', 'asset.status'])->findOrFail($id);
 
         return response()->json([
             'status' => 'success',

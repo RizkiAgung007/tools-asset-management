@@ -9,25 +9,41 @@ import {
   Eye,
   Folder,
   Layers,
+  Search,
 } from "lucide-react";
-import CategoryFromModal from "../../components/categories/CategoryFormModal";
 import { useNavigate } from "react-router-dom";
+import CategoryFromModal from "../../components/categories/CategoryFormModal";
+import Pagination from "../../components/common/Pagination";
 
 export default function CategoryPage() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [meta, setMeta] = useState(null);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
+    const timer = setTimeout(() => {
+      fetchCategories();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search, page]);
 
   const fetchCategories = async () => {
     try {
-      const response = await api.get("/api/categories");
+      const params = {
+        page: page,
+        search: search,
+        only_root: search ? null : true,
+      };
+
+      const response = await api.get("/api/categories", { params });
       setCategories(response.data.data.data || response.data.data);
+      setMeta(response.data.data);
     } catch (err) {
       console.error("failed to retrieve data:", err);
     } finally {
@@ -52,6 +68,7 @@ export default function CategoryPage() {
     navigate(`/categories/${id}`);
   };
 
+  // Delete Modal
   const handleDelete = async (id) => {
     if (!window.confirm("Yakin hapus kategori ini?")) return;
     try {
@@ -67,15 +84,34 @@ export default function CategoryPage() {
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
-          Kategori Asset
+          Asset Category
         </h1>
-        <button
-          onClick={handleCreate}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-        >
-          <Plus size={18} />
-          <span>Add</span>
-        </button>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          {/* Search Bar & Add New */}
+          <div className="relative w-full md:w-64">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search size={18} className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Search..."
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1); 
+              }}
+              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none"
+            />
+          </div>
+
+          <button
+            onClick={handleCreate}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap"
+          >
+            <Plus size={18} />
+            <span>Add</span>
+          </button>
+        </div>
       </div>
 
       {/* Data Table */}
@@ -84,8 +120,8 @@ export default function CategoryPage() {
           <thead className="bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 uppercase font-bold">
             <tr>
               <th className="px-6 py-3 w-12 text-center">No</th>
-              <th className="px-6 py-3 text-center">Category Name</th> 
-              <th className="px-6 py-3 text-center">Category Code</th> 
+              <th className="px-6 py-3 text-center">Category Name</th>
+              <th className="px-6 py-3 text-center">Category Code</th>
               <th className="px-6 py-3 text-center">Sub-Categories</th>
               <th className="px-6 py-3 text-center">Action</th>
             </tr>
@@ -110,7 +146,9 @@ export default function CategoryPage() {
                   className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   {/* No */}
-                  <td className="px-6 py-4 font-medium text-center">{index + 1}</td>
+                  <td className="px-6 py-4 font-medium text-center">
+                    {index + 1}
+                  </td>
 
                   {/* Name */}
                   <td className="px-6 py-4 font-bold text-gray-900 dark:text-white flex items-center justify-center text-center gap-3">
@@ -118,6 +156,11 @@ export default function CategoryPage() {
                       <Folder size={18} />
                     </div>
                     {cat.name}
+                    {search && cat.parent && (
+                      <span className="text-xs text-gray-400 font-normal ml-2">
+                        (in {cat.parent.name})
+                      </span>
+                    )}
                   </td>
 
                   {/* Code */}
@@ -169,6 +212,8 @@ export default function CategoryPage() {
             )}
           </tbody>
         </table>
+
+        <Pagination meta={meta} onPageChange={(p) => setPage(p)} />
       </div>
 
       <CategoryFromModal

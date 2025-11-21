@@ -1,4 +1,4 @@
-import { LayoutDashboard, FolderTree, MapPin, Tag, Truck } from "lucide-react";
+import { LayoutDashboard, FolderTree, MapPin, Tag, Truck, Box } from "lucide-react";
 import SidebarItem from "./SidebarItem";
 
 export default function Sidebar({ isOpen }) {
@@ -12,6 +12,7 @@ export default function Sidebar({ isOpen }) {
       path: "/dashboard",
       icon: <LayoutDashboard size={20} />,
     },
+    { name: "Assets", path:"/assets", icon: <Box size={20} /> },
     { name: "Category", path: "/categories", icon: <FolderTree size={20} /> },
     { name: "Location", path: "/locations", icon: <MapPin size={20} /> },
     { name: "Status", path: "/statuses", icon: <Tag size={20} /> },

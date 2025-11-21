@@ -14,20 +14,38 @@ import {
   Layers,
   Pencil,
   Trash2,
+  Search,
+  Plus,
 } from "lucide-react";
 import CategoryFormModal from "../../components/categories/CategoryFormModal";
+import Pagination from "../../components/common/Pagination";
 
 export default function CategoryDetailPage() {
   const [category, setCategory] = useState(null);
   const [loading, setLoading] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [children, setChildren] = useState([]);
+  const [meta, setMeta] = useState(null);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [loadingTable, setLoadingTable] = useState(false);
   const { id } = useParams();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchDetailCategory();
+    setSearch("");
+    setPage(1);
   }, [id]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchTableChild();
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [id, search, page]);
 
   const fetchDetailCategory = async () => {
     setLoading(true);
@@ -35,19 +53,46 @@ export default function CategoryDetailPage() {
       const response = await api.get(`/api/categories/${id}`);
       setCategory(response.data.data);
     } catch (err) {
-      console.error(err);
-      navigate("/categories");
+      navigate("/categories", err);
     } finally {
       setLoading(false);
     }
   };
 
+  const fetchTableChild = async () => {
+    setLoadingTable(true);
+    try {
+      const params = {
+        page: page,
+        search: search,
+        parent_id: id,
+      };
+
+      const response = await api.get("/api/categories", { params });
+      setChildren(response.data.data.data || response.data.data);
+      setMeta(response.data.data);
+    } catch (err) {
+      console.error(err);
+      navigate("/categories");
+    } finally {
+      setLoadingTable(false);
+    }
+  };
+
+  // Create Modal
+  const handleCreate = () => {
+    setSelectedCategory(null);
+    setIsModalOpen(true);
+  };
+
+  // Edit Modal
   const handleEditChild = (e, childCategory) => {
     e.stopPropagation();
     setSelectedCategory(childCategory);
     setIsModalOpen(true);
   };
 
+  // Delete Modal
   const handleDeleteChild = async (e, childId) => {
     e.stopPropagation();
     if (
@@ -59,7 +104,7 @@ export default function CategoryDetailPage() {
 
     try {
       await api.delete(`/api/categories/${childId}`);
-      fetchDetailCategory();
+      fetchTableChild();
     } catch (err) {
       alert("Failed to delete.", err);
     }
@@ -67,7 +112,7 @@ export default function CategoryDetailPage() {
 
   const handleSuccess = () => {
     fetchDetailCategory();
-    setLoading(true);
+    fetchTableChild();
   };
 
   if (loading)
@@ -81,7 +126,7 @@ export default function CategoryDetailPage() {
 
   if (!category) return null;
 
-  const hasChildren = category.children && category.children.length > 0;
+  //   const hasChildren = category.children && category.children.length > 0;
 
   return (
     <Layout>
@@ -97,7 +142,7 @@ export default function CategoryDetailPage() {
         {/* Breadcrumb */}
         <div className="flex items-center  text-sm text-gray-500 hover:text-blue-600 mb-4 transition-colors">
           <Link to="/categories" className="hover:text-blue-600">
-            Root
+            Category
           </Link>
           {category.parent && (
             <>
@@ -115,26 +160,37 @@ export default function CategoryDetailPage() {
         </div>
 
         {/* Title */}
-        <div className="flex items-center gap-4">
-          <div className="p-4 bg-orange-100 text-orange-600 rounded-xl">
-            <Folder size={32} />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              {category.name}
-            </h1>
-            <div className="flex items-center gap-2 mt-4">
-              <span className="text-xs font-bold bg-gray-200 text-gray-700 px-2 py-0.5 rounded">
-                CODE: {category.code || "-"}
-              </span>
-
-              {category.useful_life && (
-                <span className="text-xs font-medium text-gray-500 flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded">
-                  <Clock size={12} /> Life: {category.useful_life} Years
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex gap-4 items-center">
+            <div className="p-4 bg-orange-100 text-orange-600 rounded-xl">
+              <Folder size={32} />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                {category.name}
+              </h1>
+              <div className="flex items-center gap-2 mt-4">
+                <span className="text-xs font-bold bg-gray-200 text-gray-700 px-2 py-0.5 rounded">
+                  CODE: {category.code || "-"}
                 </span>
-              )}
+
+                {category.useful_life && (
+                  <span className="text-xs font-medium text-gray-500 flex items-center gap-1 bg-blue-50 px-2 py-0.5 rounded">
+                    <Clock size={12} /> Life: {category.useful_life} Years
+                  </span>
+                )}
+              </div>
             </div>
           </div>
+          <button
+            onClick={() => {
+              setSelectedCategory(category);
+              setIsModalOpen(true);
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 shadow-sm"
+          >
+            <Pencil size={16} /> Edit Parent
+          </button>
         </div>
       </div>
 
@@ -169,83 +225,128 @@ export default function CategoryDetailPage() {
         </div>
       </div>
 
-      {/* Category Content */}
-      {hasChildren ? (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
-            <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2">
-              <Layers size={18} /> Sub-Categories ({category.children.length})
-            </h3>
+      <div className="flex justify-between items-center mb-6">
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          {/* Search Bar & Add New */}
+          <div className="relative w-full md:w-64">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search size={18} className="text-gray-400" />
+            </div>
+            <input
+              type="text"
+              placeholder={`Search ${category.name}...`}
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none"
+            />
           </div>
-          <div className="divide-y divide-gray-100 dark:divide-gray-700">
-            {category.children.map((child) => (
-              <div
-                key={child.id}
-                onClick={() => navigate(`/categories/${child.id}`)} // Drill down
-                className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between transition-colors cursor-pointer group"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="p-2 bg-orange-50 text-orange-500 rounded group-hover:bg-white group-hover:shadow-sm transition-all">
-                    <Folder size={20} />
-                  </div>
-                  <div>
-                    <span className="font-bold text-gray-800 dark:text-gray-200 block">
-                      {child.name}
-                    </span>
-                    <span className="text-xs text-gray-400 font-mono">
-                      CODE: {child.code}
-                    </span>
-                  </div>
-                </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={(e) => handleEditChild(e, child)}
-                    className="p-2 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-full transition-colors"
-                    title="Edit Sub-Category"
-                  >
-                    <Pencil size={16} />
-                  </button>
-                  <button
-                    onClick={(e) => handleDeleteChild(e, child.id)}
-                    className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                    title="Delete Sub-Category"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                  <ChevronRight size={18} className="text-gray-300" />
-                </div>
-              </div>
-            ))}
-          </div>
+          <button
+            onClick={handleCreate}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap"
+          >
+            <Plus size={18} />
+            <span>Add</span>
+          </button>
         </div>
-      ) : (
+      </div>
+
+      {/* Category Content */}
+      {!loadingTable && children.length === 0 && !search ? (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex justify-between items-center">
             <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2">
               <Box size={18} /> Asset Inventory List
             </h3>
-            <button className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700 transition-colors">
+            <button className="text-xs bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">
               + Register Asset
             </button>
           </div>
-
-          {/* Placeholder Asset Table (Nanti gati sama data asli) */}
           <div className="p-12 text-center">
-            <div className="inline-block p-4 bg-gray-100 rounded-full text-gray-400 mb-3">
-              <Box size={32} />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-              No Assets Yet
-            </h3>
-            <p className="text-gray-500 mt-1 mb-4">
-              You haven't registered any items under {category.name} yet.
+            <p className="text-gray-500">
+              No assets registered under {category.name} yet.
             </p>
+            <button
+              onClick={() => {
+                setSelectedCategory(null);
+                setIsModalOpen(true);
+              }}
+              className="mt-4 text-sm text-blue-600 hover:underline"
+            >
+              Actually, I want to add a Sub-Category here
+            </button>
           </div>
+        </div>
+      ) : (
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+          {/* Search Table Child */}
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2">
+              <Layers size={18} /> Sub-Categories
+            </h3>
+          </div>
+
+          {/* List Child */}
+          <div className="divide-y divide-gray-100 dark:divide-gray-700">
+            {loadingTable ? (
+              <div className="p-8 text-center text-gray-500">
+                <Loader2 className="animate-spin inline mr-2" /> Loading
+                sub-categories...
+              </div>
+            ) : children.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                No sub-categories found matching "{search}".
+              </div>
+            ) : (
+              children.map((child) => (
+                <div
+                  key={child.id}
+                  onClick={() => navigate(`/categories/${child.id}`)}
+                  className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between transition-colors cursor-pointer group"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 bg-orange-50 text-orange-500 rounded group-hover:bg-white group-hover:shadow-sm transition-all">
+                      <Folder size={20} />
+                    </div>
+                    <div>
+                      <span className="font-bold text-gray-800 dark:text-gray-200 block">
+                        {child.name}
+                      </span>
+                      <span className="text-xs text-gray-400 font-mono">
+                        CODE: {child.code}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => handleEditChild(e, child)}
+                      className="p-2 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-full transition-colors"
+                    >
+                      <Pencil size={16} />
+                    </button>
+                    <button
+                      onClick={(e) => handleDeleteChild(e, child.id)}
+                      className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                    <ChevronRight size={18} className="text-gray-300" />
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          {/* Pagination Child Table */}
+          <Pagination meta={meta} onPageChange={(p) => setPage(p)} />
         </div>
       )}
 
-      <CategoryFormModal 
+      <CategoryFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={handleSuccess}

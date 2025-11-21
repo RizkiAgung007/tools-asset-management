@@ -165,8 +165,7 @@ export default function LocationDetailPage() {
             <div className="aspect-video bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center relative">
               {location.image_path ? (
                 <img
-                  src={`http://localhost:8000/storage/${location.image_path}`}
-                  alt={location.name}
+                  src={`${import.meta.env.VITE_API_URL}/storage/${location.image_path}`}                  alt={location.name}
                   className="w-full h-full object-cover"
                 />
               ) : (

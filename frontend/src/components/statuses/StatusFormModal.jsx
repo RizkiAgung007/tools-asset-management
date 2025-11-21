@@ -1,27 +1,56 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Modal from "../common/Modal";
 import api from "../../lib/axios";
 import { Loader2 } from "lucide-react";
 
-export default function StatusFormModal({ isOpen, onClose, onSuccess }) {
+export default function StatusFormModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  statusToEdit,
+}) {
   const [name, setName] = useState("");
   const [style, setStyle] = useState("secondary");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeployable, setIsDeployable] = useState(true);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (statusToEdit) {
+        setName(statusToEdit.name);
+        setStyle(statusToEdit.style);
+        setIsDeployable(Boolean(statusToEdit.is_deployable));
+      } else {
+        setName("");
+        setStyle("secondary");
+        setIsDeployable(true);
+      }
+      setError(null);
+    }
+  }, [isOpen, statusToEdit]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
 
+    const payload = {
+      name: name,
+      style: style,
+      is_deployable: isDeployable,
+    };
+
     try {
-      await api.post("/api/asset-status", { name, style });
-      setName("");
-      setStyle("secondary");
+      if (statusToEdit) {
+        await api.put(`/api/asset-status/${statusToEdit.id}`, payload);
+      } else {
+        await api.post("/api/asset-status", payload);
+      }
       onSuccess();
       onClose();
     } catch (err) {
-      setError(err.response?.data?.message || "Error saving data");
+      setError(err.response?.data?.message || "Error Saving Data.");
     } finally {
       setIsSubmitting(false);
     }
@@ -39,7 +68,7 @@ export default function StatusFormModal({ isOpen, onClose, onSuccess }) {
           </div>
         )}
 
-        {/* Input Status Name */}
+        {/* Name */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
             Status Name
@@ -105,6 +134,31 @@ export default function StatusFormModal({ isOpen, onClose, onSuccess }) {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Deployable */}
+        <div className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800">
+          <div>
+            <span className="font-medium text-sm text-gray-700 dark:text-gray-200">
+              Is Deployable?
+            </span>
+            <p className="text-xs text-gray-500">
+              Can assets with this status be assigned to users?
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsDeployable(!isDeployable)}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+              isDeployable ? "bg-blue-600" : "bg-gray-300"
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                isDeployable ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t mt-4">

@@ -3,7 +3,12 @@ import Modal from "../common/Modal";
 import api from "../../lib/axios";
 import { Loader2, Mail, MapPin, Phone, User } from "lucide-react";
 
-export default function SupplierFormModal({ isOpen, onClose, onSuccess }) {
+export default function SupplierFormModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  supplierToEdit,
+}) {
   const [form, setForm] = useState({
     name: "",
     contact_person: "",
@@ -17,16 +22,20 @@ export default function SupplierFormModal({ isOpen, onClose, onSuccess }) {
   // Reset Form
   useEffect(() => {
     if (isOpen) {
-      setForm({
-        name: "",
-        contact_person: "",
-        email: "",
-        phone: "",
-        address: "",
-      });
+      if (supplierToEdit) {
+        setForm(supplierToEdit);
+      } else {
+        setForm({
+          name: "",
+          contact_person: "",
+          email: "",
+          phone: "",
+          address: "",
+        });
+      }
       setError(null);
     }
-  }, [isOpen]);
+  }, [isOpen, supplierToEdit]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,7 +43,11 @@ export default function SupplierFormModal({ isOpen, onClose, onSuccess }) {
     setError(null);
 
     try {
-      await api.post("/api/suppliers", form);
+      if (supplierToEdit) {
+        await api.put(`/api/suppliers/${supplierToEdit.id}`, form);
+      } else {
+        await api.post("/api/suppliers", form);
+      }
       onSuccess();
       onClose();
     } catch (err) {
@@ -53,7 +66,7 @@ export default function SupplierFormModal({ isOpen, onClose, onSuccess }) {
     "w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white outline-none transition-all pl-10";
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Add new Vendor">
+    <Modal isOpen={isOpen} onClose={onClose} title={supplierToEdit ? "Edit Supplier" : "Add New Supplier"}>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <div className="bg-red-50 text-red-600 p-3 rounded text-sm border-red-200">
@@ -80,7 +93,7 @@ export default function SupplierFormModal({ isOpen, onClose, onSuccess }) {
 
         {/* Contact Person */}
         <div className="relative">
-          <User className="absolute left-3 top-9 text-gray-400" size={18} />
+          <User className="absolute left-3 top-11 text-gray-400" size={18} />
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
             Contact Person
           </label>
@@ -99,7 +112,7 @@ export default function SupplierFormModal({ isOpen, onClose, onSuccess }) {
         {/* Phone & Email */}
         <div className="grid grid-cols-2 gap-4">
           <div className="relative">
-            <Phone className="absolute left-3 top-9 text-gray-400" size={18} />
+            <Phone className="absolute left-3 top-11 text-gray-400" size={18} />
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Phone
             </label>
@@ -116,7 +129,7 @@ export default function SupplierFormModal({ isOpen, onClose, onSuccess }) {
           </div>
 
           <div className="relative">
-            <Mail className="absolute left-3 top-9 text-gray-400" size={18} />
+            <Mail className="absolute left-3 top-11 text-gray-400" size={18} />
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
               Email
             </label>
@@ -135,7 +148,7 @@ export default function SupplierFormModal({ isOpen, onClose, onSuccess }) {
 
         {/* Address */}
         <div className="relative">
-          <MapPin className="absolute left-3 top-9 text-gray-400" size={18} />
+          <MapPin className="absolute left-3 top-11 text-gray-400" size={18} />
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
             Address
           </label>

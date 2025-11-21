@@ -9,6 +9,10 @@ import LocationDetailPage from "./pages/Location/LocationDetailPage";
 import StatusPage from "./pages/Status/StatusPage";
 import SupplierPage from "./pages/Supplier/SupplierPage";
 import CategoryDetailPage from "./pages/Category/CategoryDetailPage";
+import StatusDetailPage from "./pages/Status/StatusDetailPage";
+import AssetListPage from "./pages/Asset/AssetListPage";
+import AssetFormPage from "./pages/Asset/AssetFormPage";
+import AssetDetailPage from "./pages/Asset/AssetDetailPage";
 
 // Dashboard
 function Dashboard() {
@@ -37,7 +41,12 @@ function App() {
             <Route path="/locations" element={<LocationPage />} />
             <Route path="/locations/:id" element={<LocationDetailPage />} />
             <Route path="/statuses" element={<StatusPage />} />
+            <Route path="/statuses/:id" element={<StatusDetailPage />} />
             <Route path="/suppliers" element={<SupplierPage />} />
+            <Route path="/assets" element={<AssetListPage />} />
+            <Route path="/assets/create" element={<AssetFormPage /> } />
+            <Route path="/assets/:id/edit" element={<AssetFormPage /> } />
+            <Route path="/assets/:id" element={<AssetDetailPage /> } />
         </Route>
 
       </Routes>

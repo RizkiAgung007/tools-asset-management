@@ -27,7 +27,7 @@ export default function LocationEditModal({
       setImage(null);
       setPreview(
         location.image_path
-          ? `http://localhost:8000/storage/${location.image_path}`
+          ? `${import.meta.env.VITE_API_URL}/storage/${location.image_path}`
           : null
       );
       setError(null);

@@ -79,7 +79,7 @@ class LocationController extends Controller
      */
     public function show(String $id)
     {
-        $location = Location::with(['parent.parent', 'children'])->findOrFail($id);
+        $location = Location::with(['parent.parent', 'children', 'assets.category', 'assets.status'])->findOrFail($id);
 
         return response()->json(['data' => $location]);
     }

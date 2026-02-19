@@ -14,7 +14,7 @@ class AssetController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Asset::with(['category', 'location', 'supplier', 'status']);
+        $query = Asset::with(['category', 'location', 'supplier', 'status', 'unit.department']);
 
         if ($request->search) {
             $query->where(function ($q) use ($request) {
@@ -24,12 +24,27 @@ class AssetController extends Controller
             });
         }
 
+        // Cek status asset harus is_deployable
+        if ($request->has('only_deployable')) {
+            $query->whereHas('status', function ($q) {
+                $q->where('is_deployable', true);
+            });
+
+            // Asst dipinjam
+            $query->whereDoesntHave('loans', function ($q) {
+                $q->where('status', ['pending', 'approved', 'active']);
+            });
+        }
+
+
         if ($request->category_id) {
             $query->where('category_id', $request->category_id);
         } elseif ($request->location_id) {
             $query->where('location_id', $request->location_id);
         } elseif ($request->status_id) {
             $query->where('asset_status_id', $request->status_id);
+        } elseif ($request->unit_id) {
+            $query->where('unit_id', $request->unit_id);
         }
 
         $assets = $query->latest()->paginate(10);
@@ -58,6 +73,7 @@ class AssetController extends Controller
             'category_id'     => 'required|exists:categories,id',
             'location_id'     => 'required|exists:locations,id',
             'asset_status_id' => 'required|exists:asset_statuses,id',
+            'unit_id'         => 'required|exists:units,id',
             'supplier_id'     => 'nullable|exists:suppliers,id',
             'purchase_date'   => 'nullable|date',
             'purchase_price'  => 'nullable|numeric',
@@ -124,7 +140,14 @@ class AssetController extends Controller
      */
     public function show($id)
     {
-        $asset = Asset::with(['category', 'location.parent.parent', 'supplier', 'status'])->findOrFail($id);
+        $asset = Asset::with([
+            'category',
+            'location.parent.parent',
+            'supplier',
+            'status',
+            'unit.department',
+            'loans.user'
+        ])->findOrFail($id);
 
         return response()->json([
             'status' => 'success',
@@ -143,7 +166,7 @@ class AssetController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Asset $asset, $id)
+    public function update(Request $request, $id)
     {
         $asset = Asset::findOrFail($id);
 
@@ -152,6 +175,7 @@ class AssetController extends Controller
             'category_id'     => 'required|exists:categories,id',
             'location_id'     => 'required|exists:locations,id',
             'asset_status_id' => 'required|exists:asset_statuses,id',
+            'unit_id'         => 'required|exists:units,id',
             'image'           => 'nullable|image|max:2048',
         ]);
 

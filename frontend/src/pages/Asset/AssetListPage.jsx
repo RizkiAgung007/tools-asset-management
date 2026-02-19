@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Layout from "../../components/Layout";
-import api from "../../lib/axios";
+import { Service } from "../../lib/axios";
 import {
   Plus,
   Search,
@@ -36,8 +36,7 @@ export default function AssetListPage() {
   const fetchAssets = async () => {
     setLoading(true);
     try {
-      const params = { search, page };
-      const response = await api.get("/api/assets", { params });
+      const response = await Service.assets.list({ search, page });
       setAssets(response.data.data.data);
       setMeta(response.data.data);
     } catch (error) {
@@ -51,7 +50,7 @@ export default function AssetListPage() {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this asset?")) return;
     try {
-      await api.delete(`/api/assets/${id}`);
+      await Service.assets.delete(id)
       fetchAssets();
     } catch (err) {
       alert("Failed to delete asset.", err);
@@ -206,7 +205,7 @@ export default function AssetListPage() {
                       {asset.status && (
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-bold border ${getStatusColor(
-                            asset.status.style
+                            asset.status.style,
                           )}`}
                         >
                           {asset.status.name}

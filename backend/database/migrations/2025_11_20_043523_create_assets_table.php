@@ -18,6 +18,7 @@ return new class extends Migration
             $table->foreignId('location_id')->constrained()->onDelete('restrict');
             $table->foreignId('supplier_id')->constrained()->nullOnDelete();
             $table->foreignId('asset_status_id')->constrained('asset_statuses')->onDelete('restrict');
+            $table->foreignId('unit_id')->nullable()->constrained('units')->onDelete('set null');
 
             $table->string('name');
             $table->string('code')->unique();

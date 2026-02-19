@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Modal from "../common/Modal";
-import api from "../../lib/axios";
+import { Service } from "../../lib/axios";
 import { Loader2, Upload } from "lucide-react";
 
 export default function LocationEditModal({
@@ -28,7 +28,7 @@ export default function LocationEditModal({
       setPreview(
         location.image_path
           ? `${import.meta.env.VITE_API_URL}/storage/${location.image_path}`
-          : null
+          : null,
       );
       setError(null);
     }
@@ -56,11 +56,7 @@ export default function LocationEditModal({
       if (capacity) formData.append("capacity", capacity);
       if (image) formData.append("image", image);
 
-      formData.append("_method", "PUT");
-
-      await api.post(`/api/locations/${location.id}`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      await Service.locations.update(location.id, formData);
 
       onSuccess();
       onClose();

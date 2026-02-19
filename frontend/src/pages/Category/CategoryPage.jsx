@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Layout from "../../components/Layout";
-import api from "../../lib/axios";
+import { Service } from "../../lib/axios";
 import {
   Plus,
   Pencil,
@@ -41,7 +41,7 @@ export default function CategoryPage() {
         only_root: search ? null : true,
       };
 
-      const response = await api.get("/api/categories", { params });
+      const response = await Service.categories.list(params);
       setCategories(response.data.data.data || response.data.data);
       setMeta(response.data.data);
     } catch (err) {
@@ -72,7 +72,7 @@ export default function CategoryPage() {
   const handleDelete = async (id) => {
     if (!window.confirm("Yakin hapus kategori ini?")) return;
     try {
-      await api.delete(`/api/categories/${id}`);
+      await Service.categories.delete(id);
       fetchCategories();
     } catch (err) {
       alert("Gagal menghapus.", err);
@@ -98,7 +98,7 @@ export default function CategoryPage() {
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
-                setPage(1); 
+                setPage(1);
               }}
               className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none"
             />

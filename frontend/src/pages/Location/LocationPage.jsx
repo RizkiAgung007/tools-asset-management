@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "../../components/Layout";
-import api from "../../lib/axios";
+import { Service } from "../../lib/axios";
 import { Plus, Building, Trash2, Loader2, Eye } from "lucide-react";
 import LocationFormModal from "../../components/locations/LocationFormModal";
 
@@ -13,7 +13,7 @@ export default function LocationPage() {
 
   const fetchLocations = async () => {
     try {
-      const response = await api.get("/api/locations?type=building");
+      const response = await Service.locations.list({type: 'building'})
       setLocations(response.data.data);
     } catch (err) {
       console.error(err);
@@ -36,7 +36,7 @@ export default function LocationPage() {
     )
       return;
     try {
-      await api.delete(`/api/locations/${id}`);
+      await Service.locations.delete(id)
       fetchLocations();
     } catch (err) {
       alert("Failed to delete", err);

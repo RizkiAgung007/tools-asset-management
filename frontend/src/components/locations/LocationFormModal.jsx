@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Modal from "../common/Modal";
-import api from "../../lib/axios";
+import { Service } from "../../lib/axios";
 import { Loader2 } from "lucide-react";
 
 export default function LocationFormModal({ isOpen, onClose, onSuccess }) {
@@ -28,14 +28,16 @@ export default function LocationFormModal({ isOpen, onClose, onSuccess }) {
     setIsSubmitting(true);
     setError(null);
 
+    const payload = {
+      building_name: buildingName,
+      address: address,
+      floor_name: floorName,
+      room_name: roomName,
+      description: description,
+    };
+
     try {
-      await api.post("/api/locations/hierarchy", {
-        building_name: buildingName,
-        address: address,
-        floor_name: floorName,
-        room_name: roomName,
-        description: description,
-      });
+      await Service.locations.createHierarchy(payload)
 
       onSuccess();
       onClose();

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Layout from "../../components/Layout";
-import api from "../../lib/axios";
+import { Service } from "../../lib/axios";
 import {
   ArrowLeft,
   Save,
@@ -20,6 +20,7 @@ import {
   FolderTree,
   Building,
   Layers,
+  Briefcase,
 } from "lucide-react";
 
 export default function AssetFormPage() {
@@ -34,6 +35,7 @@ export default function AssetFormPage() {
   const [categories, setCategories] = useState([]);
   const [statuses, setStatuses] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
+  const [units, setUnits] = useState([]);
 
   // const [locations, setLocations] = useState([]);
   const [buildings, setBuildings] = useState([]);
@@ -48,6 +50,7 @@ export default function AssetFormPage() {
     category_id: "",
     location_id: "",
     asset_status_id: "",
+    unit_id: "",
     supplier_id: "",
     purchase_date: "",
     purchase_price: "",
@@ -62,20 +65,22 @@ export default function AssetFormPage() {
     const loadData = async () => {
       setLoading(true);
       try {
-        const [catRes, buildRes, statRes, supRes] = await Promise.all([
-          api.get("/api/categories?per_page=100&only_children=true"),
-          api.get("/api/locations?type=building"),
-          api.get("/api/asset-status"),
-          api.get("/api/suppliers?per_page=100"),
+        const [catRes, buildRes, statRes, supRes, unitRes] = await Promise.all([
+          Service.resources.categories(),
+          Service.resources.locations("building"),
+          Service.resources.statuses(),
+          Service.resources.suppliers(),
+          Service.resources.units(),
         ]);
 
         setCategories(catRes.data.data.data || catRes.data.data);
         setBuildings(buildRes.data.data);
         setStatuses(statRes.data.data);
         setSuppliers(supRes.data.data.data || supRes.data.data);
+        setUnits(unitRes.data.data);
 
         if (isEditMode) {
-          const assetRes = await api.get(`/api/assets/${id}`);
+          const assetRes = await Service.assets.get(id);
           const data = assetRes.data.data;
 
           const loc = data.locations;
@@ -101,6 +106,7 @@ export default function AssetFormPage() {
             category_id: data.category_id,
             location_id: data.location_id,
             asset_status_id: data.asset_status_id,
+            unit_id: data.unit_id || "",
             supplier_id: data.supplier_id || "",
             purchase_date: data.purchase_date || "",
             purchase_price: data.purchase_price || "",
@@ -111,7 +117,7 @@ export default function AssetFormPage() {
 
           if (data.image_path) {
             setPreview(
-              `${import.meta.env.VITE_API_URL}/storage/${data.image_path}`
+              `${import.meta.env.VITE_API_URL}/storage/${data.image_path}`,
             );
           }
         }
@@ -127,9 +133,7 @@ export default function AssetFormPage() {
 
   const fetchFloors = async (buildingId) => {
     try {
-      const res = await api.get(
-        `/api/locations?type=floor&parent_id=${buildingId}`
-      );
+      const res = await Service.resources.locations("floor", buildingId);
       setFloors(res.data.data);
     } catch (e) {
       console.error(e);
@@ -138,9 +142,7 @@ export default function AssetFormPage() {
 
   const fetchRooms = async (floorId) => {
     try {
-      const res = await api.get(
-        `/api/locations?type=room&parent_id=${floorId}`
-      );
+      const res = await Service.resources.locations("room", floorId);
       setRooms(res.data.data);
     } catch (e) {
       console.error(e);
@@ -193,30 +195,26 @@ export default function AssetFormPage() {
 
     const formData = new FormData();
     Object.keys(form).forEach((key) => {
-      if (form[key] !== null && key !== "image") {
+      if (key != "image" && form[key] !== null && form[key] !== undefined) {
         formData.append(key, form[key]);
       }
     });
-    if (form.image) {
+    if (form.image instanceof File) {
       formData.append("image", form.image);
     }
 
     try {
       if (isEditMode) {
         formData.append("_method", "PUT");
-        await api.post(`/api/assets/${id}`, formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await Service.assets.update(id, formData);
       } else {
-        await api.post("/api/assets", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-        });
+        await Service.assets.create(formData);
       }
       navigate("/assets");
     } catch (err) {
       console.error(err);
       setError(
-        err.response?.data?.message || "Terjadi kesalahan saat menyimpan."
+        err.response?.data?.message || "Terjadi kesalahan saat menyimpan.",
       );
     } finally {
       setIsSubmitting(false);
@@ -399,6 +397,34 @@ export default function AssetFormPage() {
                 Location
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Units */}
+                <div>
+                  <label className={labelClass}>
+                    Unit Owner <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                      <Briefcase size={18} />
+                    </div>
+                    <select
+                      name="unit_id"
+                      value={form.unit_id}
+                      onChange={handleChange}
+                      className={`${inputClass} pl-10 pr-10 appearance-none`}
+                      required
+                    >
+                      <option value="">Select Unit Owner</option>
+                      {units.map((u) => (
+                        <option key={u.id} value={u.id}>
+                          {u.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500">
+                      <ChevronDown size={16} />
+                    </div>
+                  </div>
+                </div>
                 {/* Category */}
                 <div>
                   <label className={labelClass}>

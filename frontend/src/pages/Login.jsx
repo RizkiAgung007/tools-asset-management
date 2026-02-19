@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../lib/axios.js";
+import { Service } from "../lib/axios.js";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -15,12 +15,14 @@ export default function Login() {
     setError(null);
 
     try {
-      await api.get("/sanctum/csrf-cookie", { withCredentials: true });
+      await Service.auth.getCsrf()
 
-      const response = await api.post("/api/login", {
+      const payload = {
         email: email,
-        password: password,
-      });
+        password: password
+      }
+
+      const response = await Service.auth.login(payload)
 
       localStorage.setItem("token", response.data.token);
 
@@ -49,7 +51,7 @@ export default function Login() {
             <h2 className="text-2xl font-bold text-gray-800">
               Asset Management
             </h2>
-            <p className="text-gray-50 text-sm mt-1">
+            <p className="text-gray-500 text-sm mt-1">
               Masuk dengan akun perusahaan
             </p>
           </div>

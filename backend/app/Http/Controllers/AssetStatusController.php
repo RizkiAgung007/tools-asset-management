@@ -49,7 +49,10 @@ class AssetStatusController extends Controller
      */
     public function show($id)
     {
-        $status = AssetStatus::findOrFail($id);
+        $status = AssetStatus::with([
+            'assets.category',
+            'assets.location'
+        ])->findOrFail($id);
 
         return response()->json([
             'status' => 'success',

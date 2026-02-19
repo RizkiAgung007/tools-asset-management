@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import Layout from "../../components/Layout";
-import api from "../../lib/axios";
+import { Service } from "../../lib/axios";
 import {
   Plus,
   Tag,
@@ -23,7 +23,7 @@ export default function StatusPage() {
 
   const fetchStatuses = async () => {
     try {
-      const response = await api.get("/api/asset-status");
+      const response = await Service.statuses.list()
       setStatuses(response.data.data || []);
     } catch (error) {
       console.error(error);
@@ -58,7 +58,7 @@ export default function StatusPage() {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this status?")) return;
     try {
-      await api.delete(`/api/asset-status/${id}`);
+      await Service.statuses.delete(id)
       fetchStatuses();
     } catch (err) {
       alert("Failed", err);
@@ -131,7 +131,7 @@ export default function StatusPage() {
                   <td className="px-6 py-4">
                     <span
                       className={`px-3 py-1 rounded-full text-xs font-bold border ${getBadgeClass(
-                        item.style
+                        item.style,
                       )}`}
                     >
                       {item.name}

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import Layout from "../../components/Layout";
-import api from "../../lib/axios";
+import { Service } from "../../lib/axios";
 import QRCode from "react-qr-code";
 import {
   ArrowLeft,
@@ -14,6 +14,9 @@ import {
   Truck,
   Calendar,
   DollarSign,
+  History,
+  CalendarCheck,
+  User,
   Image as ImageIcon,
 } from "lucide-react";
 
@@ -30,7 +33,7 @@ export default function AssetDetailPage() {
 
   const fetchAsset = async () => {
     try {
-      const response = await api.get(`/api/assets/${id}`);
+      const response = await Service.assets.get(id);
       setAsset(response.data.data);
     } catch (error) {
       console.error(error);
@@ -43,7 +46,7 @@ export default function AssetDetailPage() {
   const handleDelete = async () => {
     if (!window.confirm("Are you sure you want to delete this asset?")) return;
     try {
-      await api.delete(`/api/assets/${id}`);
+      await Service.assets.delete(id);
       navigate("/assets");
     } catch (err) {
       alert("Failed to delete asset.", err);
@@ -111,7 +114,7 @@ export default function AssetDetailPage() {
             {asset.status && (
               <span
                 className={`text-sm px-3 py-1 rounded-full border ${getStatusColor(
-                  asset.status.style
+                  asset.status.style,
                 )}`}
               >
                 {asset.status.name}
@@ -140,7 +143,6 @@ export default function AssetDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 pb-10">
-
         <div className="space-y-6">
           {/* Asset Image */}
           <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700">
@@ -168,11 +170,7 @@ export default function AssetDetailPage() {
               Asset Tag QR
             </h3>
             <div className="p-4 bg-white rounded-xl border-2 border-dashed border-gray-200">
-              <QRCode
-                value={asset.code} 
-                size={140}
-                level="H"
-              />
+              <QRCode value={asset.code} size={140} level="H" />
             </div>
             <p className="text-lg font-bold text-gray-800 dark:text-white mt-4 font-mono tracking-wide">
               {asset.code}
@@ -313,6 +311,94 @@ export default function AssetDetailPage() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <div className="mt-8 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
+          <h3 className="font-bold text-gray-800 dark:text-white flex items-center gap-2">
+            <History size={18} className="text-blue-600" /> Loan History
+          </h3>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+            <thead className="bg-gray-50 dark:bg-gray-700 dark:text-gray-200 uppercase font-bold text-xs">
+              <tr>
+                <th className="px-6 py-3">Load ID</th>
+                <th className="px-6 py-3">Borrower</th>
+                <th className="px-6 py-3">Date Out</th>
+                <th className="px-6 py-3">Date In</th>
+                <th className="px-6 py-3">Status</th>
+                <th className="px-6 py-3">Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              {asset.loans && asset.loans.length > 0 ? (
+                asset.loans
+                  .sort((a, b) => b.id - a.id)
+                  .map((loan) => (
+                    <tr
+                      key={loan.id}
+                      className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                    >
+                      <td className="px-6 py-4 font-mono text-blue-600">
+                        {loan.loan_code}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2 font-medium text-gray-900 dark:text-white">
+                          <User size={18} className="text-gray-400" />
+                          {loan.user?.name}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">{loan.loan_date}</td>
+                      <td className="px-6 py-4">
+                        {loan.status === "returned" ? (
+                          <span className="text-green-600 font-medium flex items-center gap-2">
+                            <CalendarCheck /> {loan.return_date}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 italic">
+                            Excepted: {loan.return_date}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`px-2 py-1 rounded-xl font-bold uppercase text-[10px]
+                          ${
+                            loan.status === "returned"
+                              ? "bg-gray-100 text-gray-600"
+                              : loan.status === "active" ||
+                                  loan.status === "approved"
+                                ? "bg-green-100 text-green-700"
+                                : loan.status === "rejected"
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-yellow-100 text-yellow-700"
+                          }
+                        `}
+                        >
+                          {loan.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 italic text-gray-500 max-w-xs truncate">
+                        {loan.notes || loan.reason}
+                      </td>
+                    </tr>
+                  ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="6"
+                    className="px-6 py-10 text-center text-gray-400"
+                  >
+                    <History size={40} className="mx-auto mb-2 opacity-20" />
+                    <p>No loan history found for this asset.</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </Layout>

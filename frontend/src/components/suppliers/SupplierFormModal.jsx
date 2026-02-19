@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Modal from "../common/Modal";
-import api from "../../lib/axios";
+import { Service } from "../../lib/axios";
 import { Loader2, Mail, MapPin, Phone, User } from "lucide-react";
 
 export default function SupplierFormModal({
@@ -44,9 +44,9 @@ export default function SupplierFormModal({
 
     try {
       if (supplierToEdit) {
-        await api.put(`/api/suppliers/${supplierToEdit.id}`, form);
+        await Service.suppliers.update(supplierToEdit.id, form)
       } else {
-        await api.post("/api/suppliers", form);
+        await Service.suppliers.create(form)
       }
       onSuccess();
       onClose();
@@ -66,7 +66,11 @@ export default function SupplierFormModal({
     "w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white outline-none transition-all pl-10";
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={supplierToEdit ? "Edit Supplier" : "Add New Supplier"}>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={supplierToEdit ? "Edit Supplier" : "Add New Supplier"}
+    >
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <div className="bg-red-50 text-red-600 p-3 rounded text-sm border-red-200">

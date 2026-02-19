@@ -1,6 +1,6 @@
-import { useState } from "react";
-import Sidebar from "./layout/Sidebar";
-import Header from "./layout/Header";
+import { lazy, useState } from "react";
+const Sidebar = lazy(() => import("./layout/Sidebar"))
+const Header = lazy(() => import("./layout/Header"))
 
 export default function Layout({ children }) {
     const [sidebarOpen, setSidebarOpen] = useState(true);

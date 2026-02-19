@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Asset;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -86,7 +87,23 @@ class CategoryController extends Controller
      */
     public function show(string $id)
     {
-        $category = Category::with(['parent', 'children', 'asset.location', 'asset.status'])->findOrFail($id);
+        $category = Category::with(['parent', 'children', 'assets.location', 'assets.status'])->findOrFail($id);
+
+        $categories = collect([$category->id]);
+        foreach ($category->children as $child) {
+            $categories->push($child->id);
+        }
+
+        $stats = Asset::whereIn('category_id', $categories)->selectRaw('count(*) as total_items')
+                ->selectRaw("sum(case when asset_status_id = (select id from asset_statuses where slug = 'ready' limit 1) then 1 else 0 end) as total_ready")
+                ->selectRaw("sum(purchase_price) as total_price")
+                ->first();
+
+        $category->stats = [
+            'total_assets' => $stats->total_items ?? 0,
+            'total_price'  => $stats->total_price ?? 0,
+            'total_ready'  => $stats->total_ready ?? 0
+        ];
 
         return response()->json([
             'status' => 'success',

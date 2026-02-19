@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import api from "../../lib/axios";
+import { Service } from "../../lib/axios";
 import Modal from "../common/Modal";
 import { Loader2 } from "lucide-react";
 
@@ -38,12 +38,11 @@ export default function CategoryFromModal({
 
   const fetchParents = async () => {
     try {
-      const response = await api.get("/api/categories");
+      const response = await Service.categories.list();
       const list = response.data.data.data || response.data.data;
 
-      const filtered = list.filter(c => c.id !== categoryToEdit?.id);
+      const filtered = list.filter((c) => c.id !== categoryToEdit?.id);
       setParents(filtered);
-
     } catch (err) {
       console.error(err);
     }
@@ -58,14 +57,14 @@ export default function CategoryFromModal({
       name: formName,
       code: formCode,
       useful_life: usefulLife,
-      parent_id: parentId || null
+      parent_id: parentId || null,
     };
 
     try {
       if (categoryToEdit) {
-        await api.put(`/api/categories/${categoryToEdit.id}`, payload);
+        await Service.categories.update(categoryToEdit.id, payload);
       } else {
-        await api.post("/api/categories", payload);
+        await Service.categories.create(payload);
       }
 
       setFormName("");
@@ -124,7 +123,7 @@ export default function CategoryFromModal({
         </div>
 
         {/* Parent Category Dropdown */}
-        <div className="col-span-2"> 
+        <div className="col-span-2">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
             Parent Category
           </label>
@@ -135,8 +134,10 @@ export default function CategoryFromModal({
             className={inputClass}
           >
             <option>Choose Parent</option>
-            {parents.map(p => (
-              <option key={p.id} value={p.id}>{p.name}</option>
+            {parents.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
             ))}
           </select>
         </div>

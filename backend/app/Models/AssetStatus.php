@@ -17,4 +17,10 @@ class AssetStatus extends Model
     protected $guarded = [
         'id',
     ];
+
+    // Menamnpilkan asset pada relasi status
+    public function assets()
+    {
+        return $this->hasMany(Asset::class, 'asset_status_id');
+    }
 }

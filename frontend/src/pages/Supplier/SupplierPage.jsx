@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import api from "../../lib/axios";
+import { Service } from "../../lib/axios";
 import Layout from "../../components/Layout";
 import SupplierFormModal from "../../components/suppliers/SupplierFormModal";
 import {
@@ -12,6 +12,7 @@ import {
   User,
   Pencil,
   Search,
+  MapPin,
 } from "lucide-react";
 import Pagination from "../../components/common/Pagination";
 
@@ -39,7 +40,7 @@ export default function SupplierPage() {
         search: search,
       };
 
-      const response = await api.get("/api/suppliers", { params });
+      const response = await Service.suppliers.list(params);
       setSuppliers(response.data.data.data);
       setMeta(response.data.data);
     } catch (err) {
@@ -64,7 +65,7 @@ export default function SupplierPage() {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete this supplier?")) return;
     try {
-      await api.delete(`api/suppliers/${id}`);
+      await Service.suppliers.delete(id)
       fetchSuppliers();
     } catch (err) {
       alert("Failed", err);
@@ -117,13 +118,14 @@ export default function SupplierPage() {
                 <th className="px-6 py-3">Company</th>
                 <th className="px-6 py-3">Contact Person</th>
                 <th className="px-6 py-3">Contact Info</th>
+                <th className="px-6 py-3">Address</th>
                 <th className="px-6 py-3 text-center">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {loading ? (
                 <tr>
-                  <td colSpan="4" className="px-6 py-8 text-center">
+                  <td colSpan="5" className="px-6 py-8 text-center">
                     <Loader2 className="animate-spin inline mr-2" /> Loading...
                   </td>
                 </tr>
@@ -175,9 +177,15 @@ export default function SupplierPage() {
                         </div>
                       )}
                     </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
+                        <MapPin size={14} className="text-gray-400" />{" "}
+                        {item.address}
+                      </div>
+                    </td>
                     <td className="px-6 py-4 flex justify-center gap-2">
                       <button
-                        onClick={() => handleEdit(item)} 
+                        onClick={() => handleEdit(item)}
                         className="text-yellow-500 hover:text-yellow-600 p-1 hover:bg-yellow-50 rounded"
                       >
                         <Pencil size={18} />

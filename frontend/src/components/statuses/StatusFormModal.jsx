@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import Modal from "../common/Modal";
-import api from "../../lib/axios";
+import { Service } from "../../lib/axios";
 import { Loader2 } from "lucide-react";
 
 export default function StatusFormModal({
@@ -43,9 +43,9 @@ export default function StatusFormModal({
 
     try {
       if (statusToEdit) {
-        await api.put(`/api/asset-status/${statusToEdit.id}`, payload);
+        await Service.statuses.update(statusToEdit.id, payload)
       } else {
-        await api.post("/api/asset-status", payload);
+        await Service.statuses.create(payload)
       }
       onSuccess();
       onClose();

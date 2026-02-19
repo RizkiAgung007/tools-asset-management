@@ -7,6 +7,7 @@ import {
   Box,
   FileText,
   Wrench,
+  ClipboardCheck,
 } from "lucide-react";
 import SidebarItem from "./SidebarItem";
 
@@ -28,6 +29,7 @@ export default function Sidebar({ isOpen }) {
     { name: "Status", path: "/statuses", icon: <Tag size={20} /> },
     { name: "Supplier", path: "/suppliers", icon: <Truck size={20} /> },
     { name: "Maintenance", path: "/maintenances", icon: <Wrench size={20} /> },
+    { name: "Stock Opname", path: "/audit", icon: <ClipboardCheck size={20} /> }
   ];
 
   return (

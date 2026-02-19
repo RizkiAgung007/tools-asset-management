@@ -4,23 +4,36 @@ import { lazy } from "react";
 import Login from "./pages/Login";
 import Layout from "./components/Layout";
 import ProtectedRoute from "./components/ProtectedRoute";
-const Dashboard = lazy(() => import("./pages/Dashboard"))
-const CategoryPage = lazy(() => import("./pages/Category/CategoryPage"))
-const CategoryDetailPage = lazy(() => import("./pages/Category/CategoryDetailPage"))
-const LocationPage = lazy(() => import("./pages/Location/LocationPage"))
-const LocationDetailPage = lazy(() => import("./pages/Location/LocationDetailPage"))
-const StatusPage = lazy(() => import("./pages/Status/StatusPage"))
-const SupplierPage = lazy(() => import("./pages/Supplier/SupplierPage"))
-const StatusDetailPage = lazy(() => import("./pages/Status/StatusDetailPage"))
-const AssetListPage = lazy(() => import("./pages/Asset/AssetListPage"))
-const AssetFormPage = lazy(() => import("./pages/Asset/AssetFormPage"))
-const AssetDetailPage = lazy(() => import("./pages/Asset/AssetDetailPage"))
-const LoanListPage = lazy(() => import("./pages/LoanAsset/LoanListPage"))
-const LoanFormPage = lazy(() => import("./pages/LoanAsset/LoanFormPage"))
-const LoanDetailPage = lazy(() => import("./pages/LoanAsset/LoanDetailPage"))
-const MaintenanceListPage = lazy(() => import("./pages/Maintenance/MaintenanceListPage"))
-const MaintenanceFormPage = lazy(() => import("./pages/Maintenance/MaintenanceFormPage"))
-const MaintenanceDetailPage = lazy(() => import("./pages/Maintenance/MaintenanceDetailPage"))
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const CategoryPage = lazy(() => import("./pages/Category/CategoryPage"));
+const CategoryDetailPage = lazy(
+  () => import("./pages/Category/CategoryDetailPage"),
+);
+const LocationPage = lazy(() => import("./pages/Location/LocationPage"));
+const LocationDetailPage = lazy(
+  () => import("./pages/Location/LocationDetailPage"),
+);
+const StatusPage = lazy(() => import("./pages/Status/StatusPage"));
+const SupplierPage = lazy(() => import("./pages/Supplier/SupplierPage"));
+const StatusDetailPage = lazy(() => import("./pages/Status/StatusDetailPage"));
+const AssetListPage = lazy(() => import("./pages/Asset/AssetListPage"));
+const AssetFormPage = lazy(() => import("./pages/Asset/AssetFormPage"));
+const AssetDetailPage = lazy(() => import("./pages/Asset/AssetDetailPage"));
+const LoanListPage = lazy(() => import("./pages/LoanAsset/LoanListPage"));
+const LoanFormPage = lazy(() => import("./pages/LoanAsset/LoanFormPage"));
+const LoanDetailPage = lazy(() => import("./pages/LoanAsset/LoanDetailPage"));
+const MaintenanceListPage = lazy(
+  () => import("./pages/Maintenance/MaintenanceListPage"),
+);
+const MaintenanceFormPage = lazy(
+  () => import("./pages/Maintenance/MaintenanceFormPage"),
+);
+const MaintenanceDetailPage = lazy(
+  () => import("./pages/Maintenance/MaintenanceDetailPage"),
+);
+const AuditListPage = lazy(() => import("./pages/Audit/AuditLIstPage"));
+const AuditFormPage = lazy(() => import("./pages/Audit/AuditFormPage"));
+const AuditDetailPage = lazy(() => import("./pages/Audit/AuditDetailPage"));
 
 // Dashboard
 // function Dashboard() {
@@ -62,6 +75,9 @@ function App() {
           <Route path="/maintenances" element={<MaintenanceListPage />} />
           <Route path="/maintenance/create" element={<MaintenanceFormPage />} />
           <Route path="/maintenance/:id" element={<MaintenanceDetailPage />} />
+          <Route path="/audit" element={<AuditListPage />} />
+          <Route path="/audit/create" element={<AuditFormPage />} />
+          <Route path="/audit/:id" element={<AuditDetailPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

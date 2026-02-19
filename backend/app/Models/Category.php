@@ -21,9 +21,8 @@ class Category extends Model
 
     /**
      * Get the parent category
-     *
      */
-    public function parent(): BelongsTo
+    public function parent()
     {
         return $this->belongsTo(Category::class, 'parent_id');
     }
@@ -32,7 +31,7 @@ class Category extends Model
      * Get all child category
      *
      */
-    public function children(): HasMany
+    public function children()
     {
         return $this->hasMany(Category::class, 'parent_id');
     }
@@ -41,7 +40,7 @@ class Category extends Model
      * Get all asset
      *
      */
-    public function assets(): HasMany
+    public function assets()
     {
         return $this->hasMany(Asset::class);
     }

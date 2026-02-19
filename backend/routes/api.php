@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AssetController;
 use App\Http\Controllers\AssetStatusController;
+use App\Http\Controllers\AuditController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
@@ -22,16 +23,23 @@ Route::middleware('auth:sanctum')->group(function () {
 
 
     Route::apiResource('categories', CategoryController::class);
+
     Route::apiResource('locations', LocationController::class);
     Route::post('/locations/hierarchy', [LocationController::class, 'storeHierarcy']);
+
     Route::apiResource('asset-status', AssetStatusController::class);
     Route::apiResource('suppliers', SupplierController::class);
 
     Route::apiResource('assets', AssetController::class);
+
     Route::apiResource('/loans', LoanController::class);
     Route::post('/loans/{id}/approve', [LoanController::class, 'approve']);
     Route::post('/loans/{id}/reject', [LoanController::class, 'reject']);
     Route::post('/loans/{id}/return', [LoanController::class, 'returnAsset']);
+
     Route::get('/units', [UnitController::class, 'index']);
+
     Route::apiResource('maintenances', MaintenanceController::class);
+
+    Route::apiResource('audit', AuditController::class)->except('update');
 });

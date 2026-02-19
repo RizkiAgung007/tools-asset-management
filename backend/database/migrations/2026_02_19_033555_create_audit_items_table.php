@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('audits', function (Blueprint $table) {
+        Schema::create('audit_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('location_id')->constrained()->onDelete('cascade');
-            $table->foreignId('auditor_id')->constrained('users');
-            $table->date('audit_date');
+            $table->foreignId('audit_id')->constrained()->onDelete('cascade');
+            $table->foreignId('asset_id')->constrained()->onDelete('cascade');
+            $table->enum('status', ['found', 'missing', 'damaged'])->default('found');
             $table->text('notes')->nullable();
             $table->timestamps();
         });
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('audits');
+        Schema::dropIfExists('audit_items');
     }
 };

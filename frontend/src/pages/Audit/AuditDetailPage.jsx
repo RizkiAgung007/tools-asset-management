@@ -1,32 +1,19 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import Layout from "../components/Layout";
-import api from "../lib/axios";
-import {
-  ArrowLeft,
-  Loader2,
-  MapPin,
-  User,
-  Calendar,
-  FileText,
-  CheckCircle,
-  XCircle,
-  AlertTriangle,
-  Printer,
-} from "lucide-react";
+import React, { useEffect, useState } from "react";
+import Layout from "../../components/Layout";
+import { useNavigate, useParams } from "react-router-dom";
+import api from "../../lib/axios";
+import { AlertTriangle, ArrowLeft, CheckCircle, FileText, Loader2, MapPin, Printer, User, XCircle } from "lucide-react";
 
 export default function AuditDetailPage() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-
   const [audit, setAudit] = useState(null);
   const [loading, setLoading] = useState(true);
+  const { id } = useParams();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchDetail = async () => {
       try {
-        // Backend show() sudah me-load relasi: location, auditor, items.asset
-        const response = await api.get(`/api/audits/${id}`);
+        const response = await api.get(`/api/audit/${id}`);
         setAudit(response.data.data);
       } catch (err) {
         console.error(err);
@@ -38,7 +25,6 @@ export default function AuditDetailPage() {
     fetchDetail();
   }, [id]);
 
-  // Helper Hitung Statistik
   const getStats = () => {
     if (!audit?.items) return { found: 0, missing: 0, damaged: 0 };
     const found = audit.items.filter((i) => i.status === "found").length;
@@ -47,7 +33,7 @@ export default function AuditDetailPage() {
     return { found, missing, damaged };
   };
 
-  if (loading)
+  if (loading) {
     return (
       <Layout>
         <div className="flex h-screen items-center justify-center">
@@ -55,13 +41,12 @@ export default function AuditDetailPage() {
         </div>
       </Layout>
     );
+  }
   if (!audit) return null;
-
+  
   const stats = getStats();
-
   return (
     <Layout>
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <div>
           <button
@@ -77,8 +62,7 @@ export default function AuditDetailPage() {
             Stock Opname performed on{" "}
             {new Date(audit.audit_date).toLocaleDateString()}
           </p>
-        </div>
-
+        </div>{" "}
         <button
           onClick={() => window.print()}
           className="flex items-center gap-2 px-4 py-2 border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 rounded-lg shadow-sm transition-colors"
@@ -88,7 +72,7 @@ export default function AuditDetailPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* --- INFO AUDIT --- */}
+        {/* Info Audit */}
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white dark:bg-gray-800 p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
             <h3 className="text-sm font-bold text-gray-400 uppercase mb-4 tracking-wider">
@@ -141,7 +125,6 @@ export default function AuditDetailPage() {
           </div>
         </div>
 
-        {/* --- STATISTICS & RESULTS --- */}
         <div className="lg:col-span-2 space-y-6">
           {/* Stat Cards */}
           <div className="grid grid-cols-3 gap-4">
@@ -232,36 +215,3 @@ export default function AuditDetailPage() {
     </Layout>
   );
 }
-// ```
-
-// ---
-
-// ### TAHAP 2: Daftarkan Route (`App.jsx`)
-
-// Tambahkan route detail ini.
-
-// ```jsx
-// import AuditDetailPage from "./pages/AuditDetailPage"; // Import
-
-// // ...
-
-// <Route path="/audit/:id" element={<AuditDetailPage />} />
-// ```
-
-// ---
-
-// ### TAHAP 3: Sambungkan Tombol di List (`AuditListPage.jsx`)
-
-// Buka file **`frontend/src/pages/AuditListPage.jsx`**.
-
-// Cari tombol mata (View Report) yang masih *alert*, dan ganti fungsinya agar mengarah ke halaman detail.
-
-// ```jsx
-// {/* Cari bagian ini di dalam Table Body */}
-// <button
-//     onClick={() => navigate(`/audit/${audit.id}`)} // <--- Update baris ini
-//     className="text-blue-500 hover:text-blue-700 p-1 hover:bg-blue-50 rounded transition-colors"
-//     title="View Report"
-// >
-//     <Eye size={18} />
-// </button>

@@ -1,111 +1,108 @@
 <?php
 
-use Illuminate\Database\Migrations\Migration;
-use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+namespace App\Http\Controllers;
 
-return new class extends Migration
+use App\Models\Audit;
+use App\Models\AuditItem;
+use App\Models\Asset; // Untuk update status jika damaged/missing (opsional)
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB; // Penting untuk Transaction
+
+class AuditController extends Controller
 {
-    public function up(): void
+    // 1. List Riwayat Audit
+    public function index()
     {
-        // 1. Tabel Header Audit (Laporan Audit)
-        Schema::create('audits', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('location_id')->constrained()->onDelete('cascade'); // Lokasi yang diaudit
-            $table->foreignId('auditor_id')->constrained('users'); // Siapa yang melakukan audit
-            $table->date('audit_date');
-            $table->text('notes')->nullable(); // Catatan umum (misal: "Ruangan berantakan")
-            $table->timestamps();
-        });
+        // Tampilkan audit terbaru, beserta lokasi dan siapa auditornya
+        $audits = Audit::with(['location', 'auditor'])
+                    ->withCount('items') // Hitung total item yang diaudit
+                    ->latest()
+                    ->paginate(10);
 
-        // 2. Tabel Detail Item Audit (Checklist Barang)
-        Schema::create('audit_items', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('audit_id')->constrained()->onDelete('cascade');
-            $table->foreignId('asset_id')->constrained()->onDelete('cascade');
-
-            // Status hasil cek fisik
-            // found: Ada
-            // missing: Tidak ada
-            // damaged: Ada tapi rusak (kondisi fisik beda dg status sistem)
-            $table->enum('status', ['found', 'missing', 'damaged'])->default('found');
-
-            $table->text('notes')->nullable(); // Catatan per barang (misal: "Layar retak")
-            $table->timestamps();
-        });
+        return response()->json([
+            'status' => 'success',
+            'data' => $audits
+        ]);
     }
 
-    public function down(): void
+    // 2. Simpan Hasil Audit (Bulk Insert)
+    public function store(Request $request)
     {
-        Schema::dropIfExists('audit_items');
-        Schema::dropIfExists('audits');
+        $request->validate([
+            'location_id' => 'required|exists:locations,id',
+            'audit_date'  => 'required|date',
+            'notes'       => 'nullable|string',
+            'items'       => 'required|array|min:1', // Wajib ada item yang diaudit
+            'items.*.asset_id' => 'required|exists:assets,id',
+            'items.*.status'   => 'required|in:found,missing,damaged',
+            'items.*.notes'    => 'nullable|string',
+        ]);
+
+        // Gunakan Transaction agar aman
+        DB::beginTransaction();
+
+        try {
+            // A. Buat Header Audit
+            $audit = Audit::create([
+                'location_id' => $request->location_id,
+                'auditor_id'  => Auth::id(), // User yang login
+                'audit_date'  => $request->audit_date,
+                'notes'       => $request->notes,
+            ]);
+
+            // B. Simpan Detail Items (Looping)
+            foreach ($request->items as $item) {
+                AuditItem::create([
+                    'audit_id' => $audit->id,
+                    'asset_id' => $item['asset_id'],
+                    'status'   => $item['status'],
+                    'notes'    => $item['notes'] ?? null,
+                ]);
+
+                // (OPSIONAL) CANGGIH: Update status aset master otomatis
+                // Jika hasil audit 'missing', ubah status aset jadi 'Lost'
+                // Jika 'damaged', ubah jadi 'Broken'
+                if ($item['status'] === 'missing') {
+                    $this->updateAssetStatus($item['asset_id'], 'lost'); // Pastikan slug 'lost' ada di DB
+                } elseif ($item['status'] === 'damaged') {
+                    $this->updateAssetStatus($item['asset_id'], 'broken');
+                }
+            }
+
+            DB::commit(); // Simpan permanen jika sukses
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Audit submitted successfully',
+                'data' => $audit
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack(); // Batalkan semua jika error
+            return response()->json([
+                'message' => 'Failed to save audit: ' . $e->getMessage()
+            ], 500);
+        }
     }
-};
-// ```
 
-// #### 3. Jalankan Migrasi
-// ```bash
-// docker compose run --rm app php artisan migrate
-// ```
-
-// ---
-
-// ### TAHAP 2: Update Model (`Audit.php`)
-
-// Kita harus mendefinisikan relasi agar tabel Header bisa memanggil Detail-nya.
-
-// Buka file **`backend/app/Models/Audit.php`**:
-
-// ```php
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-
-class Audit extends Model
-{
-    use HasFactory;
-    protected $guarded = ['id'];
-
-    // Relasi ke Lokasi yang diaudit
-    public function location()
+    // 3. Detail Hasil Audit
+    public function show($id)
     {
-        return $this->belongsTo(Location::class);
+        $audit = Audit::with(['location', 'auditor', 'items.asset'])->findOrFail($id);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $audit
+        ]);
     }
 
-    // Relasi ke User yang mengaudit
-    public function auditor()
+    // Helper Update Status Aset
+    private function updateAssetStatus($assetId, $statusSlug)
     {
-        return $this->belongsTo(User::class, 'auditor_id');
-    }
-
-    // Relasi ke Item Detail
-    public function items()
-    {
-        return $this->hasMany(AuditItem::class);
-    }
-}
-// ```
-
-// *(Kita juga perlu buat Model `AuditItem`, tapi karena perintah `make:model` tadi cuma satu, kita buat manual sebentar).*
-
-// **Buat file `backend/app/Models/AuditItem.php`:**
-
-// ```php
-<?php
-
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Model;
-
-class AuditItem extends Model
-{
-    protected $guarded = ['id'];
-
-    public function asset()
-    {
-        return $this->belongsTo(Asset::class);
+        $status = \App\Models\AssetStatus::where('slug', $statusSlug)->first();
+        if ($status) {
+            Asset::where('id', $assetId)->update(['asset_status_id' => $status->id]);
+        }
     }
 }

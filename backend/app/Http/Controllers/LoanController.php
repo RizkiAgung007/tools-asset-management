@@ -270,20 +270,32 @@ class LoanController extends Controller
         $loan->status = 'rejected';
         $loan->notes = $request->reason ?? 'Rejected by' . $user->name;
 
-        if ($user->role == 'head') {
-            if ($loan->status_tl_user == 'pending') {
-                $loan->status_tl_user = 'rejected';
-            }
-            if ($loan->status_tl_asset == 'pending') {
-                $loan->status_tl_asset = 'rejected';
-            }
+        if ($user->role == 'superadmin') {
+            $loan->status_tl_user = 'rejected';
+            $loan->status_tl_asset = 'rejected';
+            $loan->status_ga = 'rejected';
+            $loan->status_vp = 'rejected';
+            $loan->approver_vp_id = $user->id;
         }
 
-        if ($user->role == 'ga') {
-            $loan->status_ga = 'rejected';
-        }
-        if ($user->role == 'vp') {
-            $loan->status_vp = 'rejected';
+        else {
+            if ($user->role == 'head') {
+                if ($loan->status_tl_user == 'pending') {
+                    $loan->status_tl_user = 'rejected';
+                }
+
+                if ($loan->status_tl_asset == 'pending') {
+                    $loan->status_tl_asset = 'rejected';
+                }
+            }
+
+            if ($user->role == 'ga') {
+                $loan->status_ga = 'rejected';
+            }
+
+            if ($loan->role == 'vp') {
+                $loan->status_vp = 'rejected';
+            }
         }
 
         $loan->save();

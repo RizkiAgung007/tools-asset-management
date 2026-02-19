@@ -1,67 +1,111 @@
 <?php
 
-namespace App\Http\Controllers;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
 
-use App\Models\Asset;
-use App\Models\Maintenance;
-use App\Models\Loan;
-use Illuminate\Http\Request;
-use Carbon\Carbon;
-
-class DashboardController extends Controller
+return new class extends Migration
 {
-    /**
-     * Mengambil rangkuman data untuk Dashboard.
-     */
-    public function index()
+    public function up(): void
     {
-        // Hitung Ringkasan Aset
-        $totalAssets = Asset::count();
+        // 1. Tabel Header Audit (Laporan Audit)
+        Schema::create('audits', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('location_id')->constrained()->onDelete('cascade'); // Lokasi yang diaudit
+            $table->foreignId('auditor_id')->constrained('users'); // Siapa yang melakukan audit
+            $table->date('audit_date');
+            $table->text('notes')->nullable(); // Catatan umum (misal: "Ruangan berantakan")
+            $table->timestamps();
+        });
 
-        // Menjumlahkan kolom harga beli
-        $totalValue = Asset::sum('purchase_price');
+        // 2. Tabel Detail Item Audit (Checklist Barang)
+        Schema::create('audit_items', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('audit_id')->constrained()->onDelete('cascade');
+            $table->foreignId('asset_id')->constrained()->onDelete('cascade');
 
-        // Hitung Distribusi Status (Untuk Grafik/Card)
-        $statusDistribution = Asset::selectRaw('asset_status_id, count(*) as count')
-            ->groupBy('asset_status_id')
-            ->with('status') // Load relasi status biar dapat Namanya & Warnanya
-            ->get()
-            ->map(function ($item) {
-                return [
-                    'name'  => $item->status->name,
-                    'count' => $item->count,
-                    'color' => $item->status->style, // success, danger, warning
-                ];
-            });
+            // Status hasil cek fisik
+            // found: Ada
+            // missing: Tidak ada
+            // damaged: Ada tapi rusak (kondisi fisik beda dg status sistem)
+            $table->enum('status', ['found', 'missing', 'damaged'])->default('found');
 
-        // 3. Hitung Tiket Maintenance
-        $maintenanceStats = [
-            'pending'     => Maintenance::where('status', 'pending')->count(),
-            'in_progress' => Maintenance::where('status', 'in_progress')->count(),
-        ];
+            $table->text('notes')->nullable(); // Catatan per barang (misal: "Layar retak")
+            $table->timestamps();
+        });
+    }
 
-        // 4. Hitung Peminjaman (Loans)
-        $loanStats = [
-            'active'  => Loan::whereIn('status', ['approved', 'active'])->count(),
+    public function down(): void
+    {
+        Schema::dropIfExists('audit_items');
+        Schema::dropIfExists('audits');
+    }
+};
+// ```
 
-            // Overdue: Yang statusnya Aktif TAPI tanggal kembalinya sudah lewat hari ini
-            'overdue' => Loan::whereIn('status', ['approved', 'active'])
-                             ->whereDate('return_date', '<', Carbon::now())
-                             ->count(),
-        ];
+// #### 3. Jalankan Migrasi
+// ```bash
+// docker compose run --rm app php artisan migrate
+// ```
 
-        // 5. Kembalikan Data JSON
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'summary' => [
-                    'total_assets' => $totalAssets,
-                    'total_value'  => $totalValue,
-                ],
-                'asset_status_distribution' => $statusDistribution,
-                'maintenance_alerts' => $maintenanceStats,
-                'loan_alerts' => $loanStats
-            ]
-        ]);
+// ---
+
+// ### TAHAP 2: Update Model (`Audit.php`)
+
+// Kita harus mendefinisikan relasi agar tabel Header bisa memanggil Detail-nya.
+
+// Buka file **`backend/app/Models/Audit.php`**:
+
+// ```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Audit extends Model
+{
+    use HasFactory;
+    protected $guarded = ['id'];
+
+    // Relasi ke Lokasi yang diaudit
+    public function location()
+    {
+        return $this->belongsTo(Location::class);
+    }
+
+    // Relasi ke User yang mengaudit
+    public function auditor()
+    {
+        return $this->belongsTo(User::class, 'auditor_id');
+    }
+
+    // Relasi ke Item Detail
+    public function items()
+    {
+        return $this->hasMany(AuditItem::class);
+    }
+}
+// ```
+
+// *(Kita juga perlu buat Model `AuditItem`, tapi karena perintah `make:model` tadi cuma satu, kita buat manual sebentar).*
+
+// **Buat file `backend/app/Models/AuditItem.php`:**
+
+// ```php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class AuditItem extends Model
+{
+    protected $guarded = ['id'];
+
+    public function asset()
+    {
+        return $this->belongsTo(Asset::class);
     }
 }

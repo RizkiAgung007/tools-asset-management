@@ -362,7 +362,7 @@ export default function LoanDetailPage() {
               </div>
             </div>
 
-            {/* --- ACTION BUTTONS --- */}
+            {/* Action Buttton */}
             <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 flex justify-end gap-3">
               {/* Pending -> Butuh Approval */}
               {loan.status === "pending" && (

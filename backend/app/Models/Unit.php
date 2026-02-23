@@ -21,19 +21,19 @@ class Unit extends Model
     ];
 
     // Get the department
-    public function department(): BelongsTo
+    public function department()
     {
         return $this->belongsTo(Department::class);
     }
 
     // Get all assets
-    public function assets(): HasMany
+    public function assets()
     {
         return $this->hasMany(Asset::class);
     }
 
     // Get all users
-    public function users(): HasMany
+    public function users()
     {
         return $this->hasMany(User::class);
     }

@@ -34,6 +34,11 @@ const MaintenanceDetailPage = lazy(
 const AuditListPage = lazy(() => import("./pages/Audit/AuditLIstPage"));
 const AuditFormPage = lazy(() => import("./pages/Audit/AuditFormPage"));
 const AuditDetailPage = lazy(() => import("./pages/Audit/AuditDetailPage"));
+const DepartementPage = lazy(
+  () => import("./pages/Departement/DepartementListPage"),
+);
+const UnitPage = lazy(() => import("./pages/Unit/UnitListPage"));
+const UserPage = lazy(() => import("./pages/User/UserListPage"))
 
 // Dashboard
 // function Dashboard() {
@@ -78,6 +83,9 @@ function App() {
           <Route path="/audit" element={<AuditListPage />} />
           <Route path="/audit/create" element={<AuditFormPage />} />
           <Route path="/audit/:id" element={<AuditDetailPage />} />
+          <Route path="/departements" element={<DepartementPage />} />
+          <Route path="/units" element={<UnitPage />} />
+          <Route path="/users" element={<UserPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

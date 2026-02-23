@@ -6,11 +6,13 @@ use App\Http\Controllers\AuditController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DepartementController;
 use App\Http\Controllers\LoanController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\MaintenanceController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UnitController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -37,9 +39,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/loans/{id}/reject', [LoanController::class, 'reject']);
     Route::post('/loans/{id}/return', [LoanController::class, 'returnAsset']);
 
-    Route::get('/units', [UnitController::class, 'index']);
-
     Route::apiResource('maintenances', MaintenanceController::class);
 
     Route::apiResource('audit', AuditController::class)->except('update');
+
+    Route::apiResource('users', UserController::class);
+
+    Route::apiResource('departments', DepartementController::class);
+
+    Route::apiResource('units', UnitController::class);
 });

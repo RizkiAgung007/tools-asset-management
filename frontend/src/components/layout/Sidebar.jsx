@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import {
   LayoutDashboard,
   FolderTree,
@@ -8,12 +9,27 @@ import {
   FileText,
   Wrench,
   ClipboardCheck,
+  Building2,
+  Briefcase,
+  User,
+  Users,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import SidebarItem from "./SidebarItem";
 
 export default function Sidebar({ isOpen }) {
   const userName = sessionStorage.getItem("user_name");
   const userRole = sessionStorage.getItem("user_role");
+
+  const [openDropdowns, setOpenDropdowns] = useState({});
+
+  const toggleDropdown = (menuName) => {
+    setOpenDropdowns((prev) => ({
+      ...prev,
+      [menuName]: !prev[menuName],
+    }));
+  };
 
   // Menu List
   const menuItems = [
@@ -29,7 +45,25 @@ export default function Sidebar({ isOpen }) {
     { name: "Status", path: "/statuses", icon: <Tag size={20} /> },
     { name: "Supplier", path: "/suppliers", icon: <Truck size={20} /> },
     { name: "Maintenance", path: "/maintenances", icon: <Wrench size={20} /> },
-    { name: "Stock Opname", path: "/audit", icon: <ClipboardCheck size={20} /> }
+    {
+      name: "Stock Opname",
+      path: "/audit",
+      icon: <ClipboardCheck size={20} />,
+    },
+    {
+      name: "User Management",
+      icon: <Users size={20} />,
+      isDropdown: true,
+      subItems: [
+        {
+          name: "Departement",
+          path: "/departements",
+          icon: <Building2 size={18} />,
+        },
+        { name: "Unit", path: "/units", icon: <Briefcase size={18} /> },
+        { name: "User", path: "/users", icon: <User size={18} /> },
+      ],
+    },
   ];
 
   return (
@@ -55,16 +89,65 @@ export default function Sidebar({ isOpen }) {
       </div>
 
       {/* Menu Items */}
-      <nav className="flex-1 py-4 px-3 space-y-2 overflow-y-auto">
-        {menuItems.map((item) => (
-          <SidebarItem
-            key={item.name}
-            text={item.name}
-            path={item.path}
-            icon={item.icon}
-            isOpen={isOpen}
-          />
-        ))}
+      <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+        {menuItems.map((item) => {
+          if (item.isDropdown) {
+            const isDropdownOpen = openDropdowns[item.name];
+            return (
+              <div key={item.name} className="flex flex-col gap-1">
+                <button
+                  onClick={() => toggleDropdown(item.name)}
+                  title={!isOpen ? item.name : ""}
+                  className={`flex items-center justify-between w-full px-3 py-2.5 rounded-lg font-medium transition-colors
+                    ${
+                      isDropdownOpen
+                        ? "bg-gray-100 text-blue-600 dark:bg-gray-700 dark:text-blue-400"
+                        : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+                    }`}
+                >
+                  <div className="flex items-center gap-3">
+                    {item.icon}
+                    <span
+                      className={`transition-all duration-300 ${isOpen ? "block" : "hidden"}`}
+                    >
+                      {item.name}
+                    </span>
+                  </div>
+                  {isOpen &&
+                    (isDropdownOpen ? (
+                      <ChevronDown size={16} className="text-gray-500" />
+                    ) : (
+                      <ChevronRight size={16} className="text-gray-500" />
+                    ))}
+                </button>
+
+                {isDropdownOpen && isOpen && (
+                  <div className="pl-6 space-y-1 mt-1 border-l-2 border-gray-100 dark:border-gray-700 ml-4">
+                    {item.subItems.map((subItem) => (
+                      <SidebarItem
+                        key={subItem.name}
+                        text={subItem.name}
+                        path={subItem.path}
+                        icon={subItem.icon}
+                        isOpen={isOpen}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          return (
+            <SidebarItem
+              key={item.name}
+              text={item.name}
+              path={item.path}
+              icon={item.icon}
+              isOpen={isOpen}
+            />
+          );
+        })}
       </nav>
 
       {/* User Profile */}

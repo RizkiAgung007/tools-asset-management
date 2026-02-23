@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import api from "../lib/axios";
+import { Service } from "../lib/axios";
 import {
   BarChart3,
   Box,
@@ -22,7 +22,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const response = await api.get("/api/dashboard");
+        const response = await Service.dashboard.get()
         setStats(response.data.data);
       } catch (err) {
         console.error("Error fetching dashboard data:", err);

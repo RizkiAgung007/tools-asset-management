@@ -1,8 +1,18 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../../components/Layout";
 import { useNavigate, useParams } from "react-router-dom";
-import api from "../../lib/axios";
-import { AlertTriangle, ArrowLeft, CheckCircle, FileText, Loader2, MapPin, Printer, User, XCircle } from "lucide-react";
+import { Service } from "../../lib/axios";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  CheckCircle,
+  FileText,
+  Loader2,
+  MapPin,
+  Printer,
+  User,
+  XCircle,
+} from "lucide-react";
 
 export default function AuditDetailPage() {
   const [audit, setAudit] = useState(null);
@@ -13,7 +23,7 @@ export default function AuditDetailPage() {
   useEffect(() => {
     const fetchDetail = async () => {
       try {
-        const response = await api.get(`/api/audit/${id}`);
+        const response = await Service.audits.get(id);
         setAudit(response.data.data);
       } catch (err) {
         console.error(err);
@@ -43,7 +53,7 @@ export default function AuditDetailPage() {
     );
   }
   if (!audit) return null;
-  
+
   const stats = getStats();
   return (
     <Layout>

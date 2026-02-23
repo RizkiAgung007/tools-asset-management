@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../../components/Layout";
-import api from "../../lib/axios";
+import { Service } from "../../lib/axios";
 import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
@@ -33,7 +33,7 @@ export default function AuditFormPage() {
   useEffect(() => {
     const fetchBuildings = async () => {
       try {
-        const response = await api.get("/api/locations?type=building");
+        const response = await Service.resources.locations("building");
         setBuildings(response.data.data);
       } catch (err) {
         console.error("Failed fetching data: ", err);
@@ -46,9 +46,7 @@ export default function AuditFormPage() {
 
   const fetchFloors = async (buildingId) => {
     try {
-      const response = await api.get(
-        `/api/locations?type=floor&parent_id=${buildingId}`,
-      );
+      const response = await Service.resources.locations("floor", buildingId);
       setFloors(response.data.data);
     } catch (err) {
       console.error(err);
@@ -57,9 +55,7 @@ export default function AuditFormPage() {
 
   const fetchRooms = async (floorId) => {
     try {
-      const response = await api.get(
-        `/api/locations?type=room&parent_id=${floorId}`,
-      );
+      const response = await Service.resources.locations("room", floorId);
       setRooms(response.data.data);
     } catch (err) {
       console.error(err);
@@ -96,10 +92,12 @@ export default function AuditFormPage() {
   // Fetch asset
   const fetchAssetInLocation = async (locationId) => {
     setLoading(true);
+    const payload = {
+      location_id: locationId,
+      per_page: 1000,
+    };
     try {
-      const response = await api.get(
-        `/api/assets?location_id=${locationId}&per_page=1000`,
-      );
+      const response = await Service.audits.list({ payload });
       const assetList = response.data.data.data || response.data.data;
       setAssets(assetList);
 
@@ -155,7 +153,7 @@ export default function AuditFormPage() {
         })),
       };
 
-      await api.post("/api/audit", payload);
+      await Service.audits.create(payload);
       alert("Audit submitted successfully.");
       navigate("/dashboard");
     } catch (err) {

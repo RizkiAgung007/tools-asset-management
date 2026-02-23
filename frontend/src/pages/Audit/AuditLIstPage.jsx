@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Layout from "../../components/Layout";
 import { useNavigate } from "react-router-dom";
-import api from "../../lib/axios";
+import { Service } from "../../lib/axios";
 import {
   Calendar,
   ClipboardList,
@@ -27,9 +27,7 @@ export default function AuditLIstPage() {
   const fetchAudit = async () => {
     setLoading(true);
     try {
-      const response = await api.get("/api/audit", {
-        params: { page },
-      });
+      const response = await Service.audits.list({ page });
       setAudit(response.data.data.data);
       setMeta(response.data.data);
     } catch (err) {

@@ -19,15 +19,7 @@ class User extends Authenticatable
      *
      * @var list<string>
      */
-    protected $fillable = [
-        'id',
-        'name',
-        'email',
-        'password',
-        'role',
-        'unit_id',
-        'manager_id'
-    ];
+    protected $guarded = ['id'];
 
     /**
      * The attributes that should be hidden for serialization.
@@ -56,8 +48,20 @@ class User extends Authenticatable
      * Get the Unit
      *
      */
-    public function unit(): BelongsTo
+    public function unit()
     {
         return $this->belongsTo(Unit::class);
+    }
+
+    // Relation to superior
+    public function manager()
+    {
+        return $this->belongsTo(User::class, 'managet_id');
+    }
+
+    // Relation subordinate
+    public function subordinates()
+    {
+        return $this->hasMany(User::class, 'manager_id');
     }
 }

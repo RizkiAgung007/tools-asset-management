@@ -23,7 +23,11 @@ export const Service = {
   auth: {
     getCsrf: () => api.get("/sanctum/csrf-cookie"),
     login: (credential) => api.post("/api/login", credential),
-    logout: () => api.post("/api/logout")
+    logout: () => api.post("/api/logout"),
+  },
+
+  dashboard: {
+    get: () => api.get("/api/dashboard"),
   },
 
   assets: {
@@ -103,6 +107,33 @@ export const Service = {
     get: (id) => api.get(`/api/maintenances/${id}`),
     create: (data) => api.post("api/maintenances", data),
     update: (id, data) => api.put(`/api/maintenances/${id}`, data),
+  },
+
+  audits: {
+    list: (params) => api.get("/api/audit", { params }),
+    get: (id) => api.get(`/api/audit/${id}`),
+    create: (data) => api.post("/api/audit", data),
+  },
+
+  departments: {
+    list: (params) => api.get("/api/departments", { params }),
+    create: (data) => api.post("/api/departments", data),
+    update: (id, data) => api.put(`/api/departments/${id}`, data),
+    delete: (id) => api.delete(`/api/departments/${id}`),
+  },
+
+  units: {
+    list: (params) => api.get("/api/units", { params }),
+    create: (data) => api.post("/api/units", data),
+    update: (id, data) => api.put(`/api/units/${id}`, data),
+    delete: (id) => api.delete(`/api/units/${id}`),
+  },
+
+  users: {
+    list: (params) => api.get("/api/users", { params }),
+    create: (data) => api.post("/api/users", data),
+    update: (id, data) => api.put(`/api/users/${id}`, data),
+    delete: (id) => api.delete(`/api/users/${id}`),
   },
 
   resources: {

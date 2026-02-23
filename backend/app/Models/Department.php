@@ -20,7 +20,7 @@ class Department extends Model
     ];
 
     // Get all units
-    public function units(): HasMany
+    public function units()
     {
         return $this->hasMany(Unit::class);
     }
